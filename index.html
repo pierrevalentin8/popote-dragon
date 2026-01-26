@@ -188,6 +188,7 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
 }
 
 
+
 </style>
 </head>
 <body>
@@ -348,9 +349,26 @@ function loadMyCharacter(callback){
       .catch(err => console.error("Erreur chargement personnage:", err));
   });
 }
+// Bouton retour vers Popote & Compagnie
 document.getElementById("backToPopote").onclick = () => {
   window.location.href = "https://pierrevalentin8.github.io/popote-compagnie/";
 };
+function showBackButton(show){
+  const btn = document.getElementById("backToPopote");
+  btn.style.display = show ? "block" : "none";
+}
+
+// Exemple : affichage seulement quand storyPanel est ouvert
+document.getElementById("storyBtn").onclick = async () => {
+  showBackButton(true);
+  // ... ton code existant
+};
+
+function closeStory(){
+  document.getElementById("storyPanel").style.display="none";
+  showBackButton(false);
+}
+
 
 
 
