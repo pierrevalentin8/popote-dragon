@@ -197,14 +197,67 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
   font-family: 'Courier New', monospace;
   pointer-events: none;
 }
+/* MODAL */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+}
 
 
 
 </style>
 </head>
 <body>
+<!-- Bouton Créer un compte -->
+<button id="createAccountBtn" class="main-popote-btn" onclick="openCreateAccount()">Créer un compte</button>
+
+
+<!-- MODALE CREER COMPTE -->
+<div class="modal" id="createAccountModal">
+  <div class="modal-content" style="max-width: 400px; margin: auto;">
+    <h3>Créer un compte Popote & Dragon</h3>
+    <input type="email" id="createEmail" placeholder="Adresse mail" style="width: 100%; margin-bottom: 10px;"><br>
+    <div style="position: relative; margin-bottom: 10px;">
+      <input type="password" id="createPassword" placeholder="Mot de passe" style="width: 100%;">
+      <button type="button" onclick="togglePassword('createPassword')" 
+              style="position: absolute; right: 5px; top: 5px; padding: 5px;">👁️</button>
+    </div>
+    <button onclick="createAccount()">Valider</button>
+    <button onclick="closeCreateAccount()">Annuler</button>
+  </div>
+</div>
+<!-- Bouton Connexion / Déconnexion -->
+<button id="loginBtn" class="main-popote-btn">Connexion</button>
+
+<!-- MODALE CONNEXION -->
+<div class="modal" id="loginModal">
+  <div class="modal-content" style="max-width: 400px; margin: auto;">
+    <h3>Connexion Popote & Dragon</h3>
+    <input type="email" id="loginEmail" placeholder="Adresse mail" style="width: 100%; margin-bottom: 10px;"><br>
+    <div style="position: relative; margin-bottom: 10px;">
+      <input type="password" id="loginPassword" placeholder="Mot de passe" style="width: 100%;">
+      <button type="button" onclick="togglePassword('loginPassword')" 
+              style="position: absolute; right: 5px; top: 5px; padding: 5px;">👁️</button>
+    </div>
+    <button onclick="login()">Valider</button>
+    <button onclick="closeLogin()">Annuler</button>
+  </div>
+</div>
+
 <button id="backToPopote" class="floating-back-btn">🏠 Popote & Compagnie</button>
-<div id="dragonFooter">Imaginé et créé par PM avec l'aide de Chat GPT - MAJ 16</div>
+<div id="dragonFooter">Imaginé et créé par PM avec l'aide de Chat GPT - MAJ 18</div>
 
 
 <h1>🍗 Popote & Dragon 🐉</h1>
@@ -327,16 +380,30 @@ const firebaseConfig = {
   messagingSenderId: "1036089259620",
   appId: "1:1036089259620:web:174d4be84f594141141171"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-  const auth = firebase.auth(); //
-function loadMyCharacter(callback){
-  let myCharacter = null;
+const auth = firebase.auth(); //
 
-function saveMyCharacter() {
-  localStorage.setItem("popoteDragonCharacter", JSON.stringify(myCharacter));
+function loadCharacterFromFirebase(){
+  const user = auth.currentUser;
+  if(!user) return;
+
+  db.collection("popoteDragonCharacters").doc(user.uid).get()
+    .then(doc=>{
+      if(doc.exists){
+        myCharacter = doc.data();
+        document.getElementById("createBtn").style.display="none";
+        document.getElementById("playerBtn").textContent=myCharacter.name;
+        document.getElementById("playerBtn").style.display="inline-block";
+      } else {
+        myCharacter = null;
+        document.getElementById("createBtn").style.display="inline-block";
+        document.getElementById("playerBtn").style.display="none";
+      }
+    })
+    .catch(err=>console.error("Erreur chargement perso :",err));
 }
+
 
 function loadMyCharacter() {
   const saved = localStorage.getItem("popoteDragonCharacter");
@@ -351,9 +418,52 @@ function loadMyCharacter() {
     document.getElementById("playerBtn").style.display = "none";
   }
 }
+const createAccountBtn = document.getElementById("createAccountBtn");
+const loginBtn = document.getElementById("loginBtn");
+
+// Observer l'état de connexion
+auth.onAuthStateChanged(user => {
+    if (user) {
+        // Utilisateur connecté
+        createAccountBtn.style.display = "none";
+        loginBtn.textContent = "Déconnexion";
+    } else {
+        // Aucun utilisateur connecté
+        createAccountBtn.style.display = "inline-block";
+        loginBtn.textContent = "Connexion";
+    }
+});
+
+// Gérer clic sur le bouton connexion/déconnexion
+loginBtn.addEventListener("click", () => {
+    const user = firebase.auth().currentUser;
+    if (user) {
+        // Déconnexion
+        firebase.auth().signOut()
+            .then(() => alert("Déconnecté !"))
+            .catch(err => console.error("Erreur déconnexion :", err));
+    } else {
+        // Connexion
+        openLogin(); // ouvre votre modal de connexion
+    }
+});
+
+
+// Fonction pour gérer bouton connexion / déconnexion
+function loginClick() {
+    const user = firebase.auth().currentUser;
+    if (user) {
+        // Déconnexion
+        firebase.auth().signOut().then(() => {
+            alert("Déconnecté !");
+        });
+    } else {
+        // Connexion
+        openLogin();  // ouvre la modale connexion
+    }
+}
 
     
-}
 // Bouton retour vers Popote & Compagnie
 document.getElementById("backToPopote").onclick = () => {
   window.location.href = "https://pierrevalentin8.github.io/popote-compagnie/";
@@ -385,6 +495,7 @@ let myCharacter = null;
 let stats={force:0,pv:0,defense:0,agilite:0};
 let totalPoints=10;
 
+const ADMIN_EMAIL = "pierre.valentin8@gmail.com";
 // --- Création personnage ---
 document.getElementById("createBtn").onclick = () => { document.getElementById("creator").style.display = "block"; };
 function changeStat(stat,val){
@@ -396,25 +507,17 @@ function changeStat(stat,val){
   document.getElementById("pointsLeft").textContent=totalPoints;
 }
 function validateCharacter(){
-  const user = auth.currentUser;
-  if(!user){
-    alert("Tu dois être connecté pour créer un personnage !");
-    return;
-  }
+ const user = auth.currentUser;
+if(!user){
+  alert("Tu dois être connecté pour créer un personnage !");
+  return;
+}
+
 
   if(totalPoints !== 0){
     alert("Utilise tous les points !");
     return;
   }
-async function saveMyCharacter(){
-  const user = auth.currentUser;
-  if(!user || !myCharacter) return;
-  try{
-    await db.collection("popoteDragonCharacters").doc(user.uid).set(myCharacter);
-  }catch(e){
-    console.error("Erreur sauvegarde personnage :", e);
-  }
-}
 
   const newChar = {
     name: document.getElementById("name").value || "Héros",
@@ -431,7 +534,7 @@ async function saveMyCharacter(){
   db.collection("popoteDragonCharacters").doc(user.uid).set(newChar)
     .then(() => {
 myCharacter = newChar;
-saveMyCharacter();
+
 document.getElementById("createBtn").style.display = "none";
 document.getElementById("playerBtn").textContent = newChar.name;
 document.getElementById("playerBtn").style.display = "inline-block";
@@ -444,7 +547,15 @@ alert("Personnage créé !");
       alert("Erreur lors de la création");
     });
 }
-
+async function saveMyCharacter(){
+  const user = auth.currentUser;
+  if(!user || !myCharacter) return;
+  try{
+    await db.collection("popoteDragonCharacters").doc(user.uid).set(myCharacter);
+  }catch(e){
+    console.error("Erreur sauvegarde personnage :", e);
+  }
+}
 
 
 // --- XP & Niveau ---
@@ -528,7 +639,6 @@ function loadDragonData(callback){
 
 
 // --- Admin simplifié basé sur l'auth Popote & Compagnie ---
-const ADMIN_EMAIL = "pierre.valentin8@gmail.com";
 document.getElementById("adminBtn").style.display = "none";
 
 auth.onAuthStateChanged(user=>{
@@ -536,6 +646,16 @@ auth.onAuthStateChanged(user=>{
     document.getElementById("adminBtn").style.display="inline-block";
   }
 });
+auth.onAuthStateChanged(user => {
+  if(user){
+    document.getElementById("createBtn").style.display="inline-block";
+  } else {
+    document.getElementById("createBtn").style.display="none";
+    document.getElementById("playerBtn").style.display="none";
+  }
+});
+
+
 
 document.getElementById("adminBtn").onclick = ()=>{
   renderAdminList();
@@ -849,6 +969,43 @@ window.onload = () => {
     initBossesIfEmpty();
   });
 };
+// MODALES CREATION / LOGIN
+// -------------------------
+function openCreateAccount(){ document.getElementById("createAccountModal").style.display = "flex"; }
+function closeCreateAccount(){ document.getElementById("createAccountModal").style.display = "none"; }
+function openLogin(){ document.getElementById("loginModal").style.display = "flex"; }
+function closeLogin(){ document.getElementById("loginModal").style.display = "none"; }
+function togglePassword(id){
+  const input = document.getElementById(id);
+  input.type = input.type === "password" ? "text" : "password";
+}
+
+
+// Créer le compte via Firebase
+function createAccount() {
+    const email = document.getElementById("createEmail").value.trim();
+    const password = document.getElementById("createPassword").value;
+    if (!email || !password) { alert("Veuillez remplir tous les champs."); return; }
+
+auth.createUserWithEmailAndPassword(email, password)
+        .then(() => { alert("Compte créé avec succès !"); closeCreateAccount(); })
+        .catch(err => { alert("Erreur création compte : " + err.message); });
+}
+
+// Connexion via Firebase
+function login() {
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+
+    if (!email || !password) {
+        alert("Veuillez remplir tous les champs.");
+        return;
+    }
+
+  auth.signInWithEmailAndPassword(email,password)
+      .then(()=> { alert("Connecté !"); closeLogin(); loadCharacterFromFirebase(); })
+      .catch(err=>alert("Erreur : "+err.message));
+}
 
 
 
