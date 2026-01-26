@@ -65,15 +65,23 @@ button:hover{background:linear-gradient(#c88a45,#8a5535);}
 
 /* Fiche joueur */
 .char-card {
-  background:#3b2415;
-  border:3px solid #c9a26b;
-  border-radius:10px;
-  padding:20px;
-  max-width:400px;
-  width:90%;
-  color:#fff2cc;
-  box-shadow:0 4px 15px rgba(0,0,0,0.7);
+  background: linear-gradient(145deg, #2b1d0f, #3b2715);
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 420px;
+  margin: 30px auto;
+  color: #f5e6c8;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255, 200, 120, 0.2);
 }
+.char-card h2 {
+  text-align: center;
+  font-size: 1.6em;
+  margin-bottom: 12px;
+  color: #ffcc66;
+  letter-spacing: 1px;
+}
+
 .char-header {
   display:flex;
   justify-content:space-between;
@@ -257,7 +265,7 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
 </div>
 
 <button id="backToPopote" class="floating-back-btn">🏠 Popote & Compagnie</button>
-<div id="dragonFooter">Imaginé et créé par PM avec l'aide de Chat GPT - MAJ 18</div>
+<div id="dragonFooter">Imaginé et créé par PM avec l'aide de Chat GPT - MAJ 19</div>
 
 
 <h1>🍗 Popote & Dragon 🐉</h1>
@@ -498,14 +506,18 @@ let totalPoints=10;
 const ADMIN_EMAIL = "pierre.valentin8@gmail.com";
 // --- Création personnage ---
 document.getElementById("createBtn").onclick = () => { document.getElementById("creator").style.display = "block"; };
-function changeStat(stat,val){
-  if(val===1 && totalPoints<=0) return;
-  if(val===-1 && stats[stat]<=0) return;
-  stats[stat]+=val;
-  totalPoints-=val;
-  document.getElementById(stat).textContent=stats[stat];
-  document.getElementById("pointsLeft").textContent=totalPoints;
+function changeStat(stat, val){
+  if(val === 1 && totalPoints <= 0) return;
+  if(val === -1 && stats[stat] <= 0) return;
+  if(val === -1 && totalPoints >= 10) return; // empêche dépasser le max initial
+
+  stats[stat] += val;
+  totalPoints -= val;
+
+  document.getElementById(stat).textContent = stats[stat];
+  document.getElementById("pointsLeft").textContent = totalPoints;
 }
+
 function validateCharacter(){
  const user = auth.currentUser;
 if(!user){
@@ -561,12 +573,19 @@ async function saveMyCharacter(){
 // --- XP & Niveau ---
 function xpForNextLevel(level){ return level*10; }
 function checkLevelUp(character){
+  let leveled = false;
   while(character.xp >= xpForNextLevel(character.level)){
     character.xp -= xpForNextLevel(character.level);
     character.level++;
-    character.freePoints+=2;
+    character.freePoints += 2;
+    leveled = true;
+  }
+
+  if(leveled){
+    refreshSheet(character);
   }
 }
+
 function getTotalXP(character){
   let total = character.xp;
   for(let lvl=1;lvl<character.level;lvl++){total+=xpForNextLevel(lvl);}
@@ -597,7 +616,7 @@ function refreshSheet(c){
   let xpForNext=xpForNextLevel(c.level);
   document.getElementById("sheetXPBar").style.width=Math.min(100,(c.xp/xpForNext)*100)+"%";
 }
-function changeSheetStat(stat, val){
+async function changeSheetStat(stat, val){
   if(!myCharacter) return;
   if(val === 1 && myCharacter.freePoints <= 0) return;
   if(val === -1 && myCharacter.stats[stat] <= 0) return;
@@ -607,8 +626,18 @@ function changeSheetStat(stat, val){
 
   const user = auth.currentUser;
   if(!user) return;
-  
+
+  try{
+    await db.collection("popoteDragonCharacters").doc(user.uid).update({
+      stats: myCharacter.stats,
+      freePoints: myCharacter.freePoints
+    });
+    refreshSheet(myCharacter);
+  }catch(e){
+    console.error("Erreur maj stats :", e);
+  }
 }
+
 
 
 function closeSheet(){document.getElementById("charSheet").style.display="none";}
