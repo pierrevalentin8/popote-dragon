@@ -265,7 +265,7 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
 </div>
 
 <button id="backToPopote" class="floating-back-btn">🏠 Popote & Compagnie</button>
-<div id="dragonFooter">Imaginé et créé par PM avec l'aide de Chat GPT - MAJ 19</div>
+<div id="dragonFooter">Imaginé et créé par PM avec l'aide de Chat GPT - MAJ 20</div>
 
 
 <h1>🍗 Popote & Dragon 🐉</h1>
@@ -392,55 +392,48 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth(); //
 
-function loadCharacterFromFirebase(){
-  const user = auth.currentUser;
-  if(!user) return;
-
-  db.collection("popoteDragonCharacters").doc(user.uid).get()
-    .then(doc=>{
-      if(doc.exists){
-        myCharacter = doc.data();
-        document.getElementById("createBtn").style.display="none";
-        document.getElementById("playerBtn").textContent=myCharacter.name;
-        document.getElementById("playerBtn").style.display="inline-block";
-      } else {
-        myCharacter = null;
-        document.getElementById("createBtn").style.display="inline-block";
-        document.getElementById("playerBtn").style.display="none";
-      }
-    })
-    .catch(err=>console.error("Erreur chargement perso :",err));
-}
 
 
-function loadMyCharacter() {
-  const saved = localStorage.getItem("popoteDragonCharacter");
-  if(saved){
-    myCharacter = JSON.parse(saved);
-    document.getElementById("createBtn").style.display = "none";
-    document.getElementById("playerBtn").textContent = myCharacter.name;
-    document.getElementById("playerBtn").style.display = "inline-block";
-  } else {
-    myCharacter = null;
-    document.getElementById("createBtn").style.display = "inline-block";
-    document.getElementById("playerBtn").style.display = "none";
-  }
-}
+
+
 const createAccountBtn = document.getElementById("createAccountBtn");
 const loginBtn = document.getElementById("loginBtn");
-
-// Observer l'état de connexion
-auth.onAuthStateChanged(user => {
-    if (user) {
-        // Utilisateur connecté
-        createAccountBtn.style.display = "none";
-        loginBtn.textContent = "Déconnexion";
-    } else {
-        // Aucun utilisateur connecté
-        createAccountBtn.style.display = "inline-block";
-        loginBtn.textContent = "Connexion";
+// --- Gestion affichage bouton joueur / création ---
+async function updatePlayerButton() {
+    const user = auth.currentUser;
+    if(!user){
+        // aucun utilisateur connecté
+        createBtn.style.display = "inline-block";
+        playerBtn.style.display = "none";
+        return;
     }
+
+    // Vérifier si le personnage existe dans Firebase
+    try {
+        const doc = await db.collection("popoteDragonCharacters").doc(user.uid).get();
+        if(doc.exists){
+            myCharacter = doc.data();
+            createBtn.style.display = "none";
+            playerBtn.textContent = myCharacter.name;
+            playerBtn.style.display = "inline-block";
+        } else {
+            myCharacter = null;
+            createBtn.style.display = "inline-block";
+            playerBtn.style.display = "none";
+        }
+    } catch(e){
+        console.error("Erreur chargement perso :", e);
+        createBtn.style.display = "inline-block";
+        playerBtn.style.display = "none";
+    }
+}
+
+// Observer état connexion Firebase
+auth.onAuthStateChanged(user => {
+    updatePlayerButton();
 });
+
+
 
 // Gérer clic sur le bouton connexion/déconnexion
 loginBtn.addEventListener("click", () => {
