@@ -166,9 +166,33 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
   textarea{width:100%;height:40px;}
   input[type="text"], select, input[type="number"]{width:100%;box-sizing:border-box;}
 }
+.floating-back-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 15px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  background: linear-gradient(#b57b3d,#7a4a2e);
+  color: #fff2cc;
+  border: 3px solid #e0b97d;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+  z-index: 1000;
+  transition: transform 0.2s;
+}
+.floating-back-btn:hover {
+  background: linear-gradient(#c88a45,#8a5535);
+  transform: scale(1.05);
+}
+
+
 </style>
 </head>
 <body>
+<button id="backToPopote" class="floating-back-btn">🏠 Popote & Compagnie</button>
+
 
 <h1>🍗 Popote & Dragon 🐉</h1>
 <button id="createBtn">Créer son personnage</button>
@@ -324,6 +348,11 @@ function loadMyCharacter(callback){
       .catch(err => console.error("Erreur chargement personnage:", err));
   });
 }
+document.getElementById("backToPopote").onclick = () => {
+  window.location.href = "https://pierrevalentin8.github.io/popote-compagnie/";
+};
+
+
 
 </script>
 
