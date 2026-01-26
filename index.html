@@ -464,23 +464,20 @@ function saveDragonData(){
   .then(()=>console.log("🔥 Dragon sauvegardé"))
   .catch(err=>console.error("Firebase error:", err));
 }
-async function saveMyCharacter(character){
-  const user = auth.currentUser;
-  if(!user) return;
- }
+
 
 
 function loadDragonData(callback){
   db.collection("popoteDragon").doc("main").get()
     .then(doc=>{
-      if(doc.exists){
-        const data = doc.data();
-       if(data.bosses) localStorage.setItem("bosses", JSON.stringify(data.bosses));
+      if(doc.exists && doc.data().bosses){
+        bosses = doc.data().bosses;
       }
       if(callback) callback();
     })
     .catch(err=>console.error("Firebase load error:", err));
 }
+
 
 // --- Admin simplifié basé sur l'auth Popote & Compagnie ---
 const ADMIN_EMAIL = "pierre.valentin8@gmail.com";
@@ -508,7 +505,33 @@ function renderAdminList(){
       div.className="admin-char-line";
 
       const info=document.createElement("div");
-      info.textContent=`${c.name} (Niv ${c.level})`;
+      info.className="admin-char-info";
+      info.textContent=`${c.name} (Niv ${c.level} - XP ${c.xp})`;
+
+      const actions=document.createElement("div");
+      actions.className="admin-char-actions";
+
+      const xpInput=document.createElement("input");
+      xpInput.type="number";
+      xpInput.placeholder="XP";
+
+      const btnXP=document.createElement("button");
+      btnXP.textContent="Donner XP";
+      btnXP.onclick=async()=>{
+        const xp=parseInt(xpInput.value);
+        if(isNaN(xp) || xp<=0) return alert("XP invalide");
+
+        c.xp += xp;
+        checkLevelUp(c);
+
+        await db.collection("popoteDragonCharacters").doc(doc.id).update({
+          xp:c.xp,
+          level:c.level,
+          freePoints:c.freePoints
+        });
+
+        renderAdminList();
+      };
 
       const btnDel=document.createElement("button");
       btnDel.textContent="Supprimer";
@@ -519,12 +542,17 @@ function renderAdminList(){
         }
       };
 
+      actions.appendChild(xpInput);
+      actions.appendChild(btnXP);
+      actions.appendChild(btnDel);
+
       div.appendChild(info);
-      div.appendChild(btnDel);
+      div.appendChild(actions);
       container.appendChild(div);
     });
   });
 }
+
 
 
 function closeAdmin(){ 
@@ -532,41 +560,95 @@ function closeAdmin(){
 }
 
 // --- Boss / Histoire ---
-let bosses=[{name:"Graduku", hpMax:100, hp:100, defeated:false, xpReward:20},{name:"Drakzor", hpMax:150, hp:150, defeated:false, xpReward:30},{name:"Tornak", hpMax:200, hp:200, defeated:false, xpReward:40},{name:"Morgath", hpMax:250, hp:250, defeated:false, xpReward:50},{name:"Zeroth", hpMax:300, hp:300, defeated:false, xpReward:60},{name:"Vulgrim", hpMax:350, hp:350, defeated:false, xpReward:70},{name:"Fangor", hpMax:400, hp:400, defeated:false, xpReward:80},{name:"Cindral", hpMax:450, hp:450, defeated:false, xpReward:90},{name:"Oryn", hpMax:500, hp:500, defeated:false, xpReward:100},{name:"Eldrax", hpMax:600, hp:600, defeated:false, xpReward:120}];
+const defaultBosses = [
+  {name:"Graduku", hpMax:100, hp:100, defeated:false, xpReward:20},
+  {name:"Drakzor", hpMax:150, hp:150, defeated:false, xpReward:30},
+  {name:"Tornak", hpMax:200, hp:200, defeated:false, xpReward:40},
+  {name:"Morgath", hpMax:250, hp:250, defeated:false, xpReward:50},
+  {name:"Zeroth", hpMax:300, hp:300, defeated:false, xpReward:60},
+  {name:"Vulgrim", hpMax:350, hp:350, defeated:false, xpReward:70},
+  {name:"Fangor", hpMax:400, hp:400, defeated:false, xpReward:80},
+  {name:"Cindral", hpMax:450, hp:450, defeated:false, xpReward:90},
+  {name:"Oryn", hpMax:500, hp:500, defeated:false, xpReward:100},
+  {name:"Eldrax", hpMax:600, hp:600, defeated:false, xpReward:120}
+];
 
-function saveBosses(){ 
-  localStorage.setItem("bosses",JSON.stringify(bosses)); 
-  saveDragonData();
-}
-
-function loadBosses() { 
-  let saved = JSON.parse(localStorage.getItem("bosses") || "null"); 
-  if(saved) {
+let bosses = [];
+function initBosses(){
+  const saved = JSON.parse(localStorage.getItem("bosses") || "null");
+  if(saved && saved.length){
     bosses = saved;
+  } else {
+    bosses = JSON.parse(JSON.stringify(defaultBosses));
+    localStorage.setItem("bosses", JSON.stringify(bosses));
   }
 }
 
-document.getElementById("storyBtn").onclick=()=>{
-  loadBosses();
-  renderBossProgress();
-  renderBossList();
-  document.getElementById("storyPanel").style.display="block";
-};
+function saveBosses(){ 
+  saveDragonData();
+}
+async function loadStory() {
+  // Assure que le personnage est chargé
+  if(!myCharacter){
+    alert("Crée ton personnage avant de voir l'histoire !");
+    return;
+  }
+
+  // Charger bosses depuis Firebase
+  try{
+    const doc = await db.collection("popoteDragon").doc("main").get();
+    if(doc.exists && doc.data().bosses && doc.data().bosses.length){
+      bosses = doc.data().bosses;
+      localStorage.setItem("bosses", JSON.stringify(bosses));
+    } else {
+      bosses = JSON.parse(JSON.stringify(defaultBosses));
+      localStorage.setItem("bosses", JSON.stringify(bosses));
+      await db.collection("popoteDragon").doc("main").set({bosses});
+    }
+
+    renderBossProgress();
+    renderBossList();
+    document.getElementById("storyPanel").style.display = "block";
+  } catch(e){
+    console.error("Erreur chargement Histoire :", e);
+    alert("Erreur de chargement de l'histoire : " + e.message);
+  }
+}
+
+// Bouton Histoire
+document.getElementById("storyBtn").onclick = loadStory;
+
+
+function initBossesIfEmpty(){
+  db.collection("popoteDragon").doc("main").get().then(doc=>{
+    if(!doc.exists){
+      db.collection("popoteDragon").doc("main").set({bosses:bosses});
+    }
+  });
+}
+
+
 function closeStory(){ document.getElementById("storyPanel").style.display="none"; }
 
 function renderBossProgress(){
   const container=document.getElementById("bossProgress");
   container.innerHTML="";
+
   bosses.forEach((boss,index)=>{
+    if(!boss.name) return; // sécurité si boss mal formé
+
     const div=document.createElement("div");
     div.className="bossProgressItem";
+
     if(boss.defeated) div.classList.add("bossVaincu");
     else if(index===0 || bosses[index-1].defeated) div.classList.add("bossDisponible");
     else div.classList.add("bossBloque");
+
     div.textContent=boss.name.charAt(0);
     container.appendChild(div);
   });
 }
+
 
 function renderBossList(){
   const container=document.getElementById("bossList");
@@ -574,6 +656,7 @@ function renderBossList(){
   if(!myCharacter) return;
 
   bosses.forEach((boss,index)=>{
+    if(!boss.name || !boss.hpMax) return; // sécurité
     const div=document.createElement("div");
     div.className="boss-container";
     const infoDiv=document.createElement("div");
@@ -712,11 +795,11 @@ async function duelAnimated(p1, p2){
 // --- Initialisation page ---
 window.onload = () => {
   loadMyCharacter(() => {
-    loadBosses();
-    renderBossProgress();
-    renderBossList();
+    initBosses(); // remplit bosses depuis localStorage si présent
   });
 };
+
+
 
 
 
