@@ -132,31 +132,6 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
 .bossDisponible{background:#ff0;}
 .bossBloque{background:#888;}
 
-/* Arène */
-#arenaLog{
-  background:#2b1b12;
-  border:1px solid #c9a26b;
-  border-radius:4px;
-  padding:10px;
-  max-height:200px;
-  overflow-y:auto;
-  margin:10px 0;
-  color:#fff2cc;
-  font-family:'Courier New',monospace;
-  font-size:14px;
-}
-#fightBtn{
-  padding:6px 12px;
-  margin:5px 0;
-  font-family:'Courier New',monospace;
-  font-size:14px;
-  background:linear-gradient(#b57b3d,#7a4a2e);
-  color:#fff2cc;
-  border:3px solid #e0b97d;
-  border-radius:4px;
-  cursor:pointer;
-}
-#fightBtn:hover{background:linear-gradient(#c88a45,#8a5535);}
 
 /* Responsive mobile */
 @media (max-width:600px){
@@ -265,7 +240,7 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
 </div>
 
 <button id="backToPopote" class="floating-back-btn">🏠 Popote & Compagnie</button>
-<div id="dragonFooter">Imaginé et créé par PM avec l'aide de Chat GPT - MAJ 20</div>
+<div id="dragonFooter">Imaginé et créé par PM avec l'aide de Chat GPT - MAJ 21</div>
 
 
 <h1>🍗 Popote & Dragon 🐉</h1>
@@ -273,7 +248,215 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
 <button id="playerBtn" style="display:none;"></button>
 <button id="adminBtn">Maître du Jeu</button>
 <button id="storyBtn">Histoire</button>
-<button id="arenaBtn">Arène</button>
+<button id="arenaBtn">⚔️ Arène</button>
+
+<!-- MODALE ARENE simplifiée -->
+<div class="modal" id="arenaModal">
+  <div class="modal-content" style="max-width:500px;">
+    <h3>Arène</h3>
+    <button onclick="closeModal('arenaModal')">🔙 Retour</button>
+<p id="arenaStats">Victoires : 0 | Défaites : 0</p>
+
+    <p id="arenaCounter">Combats restants : 0/5</p>
+    <button id="fightBtn">⚔️ Combat</button>
+
+    <h4>Historique des combats</h4>
+    <div id="arenaHistory" style="max-height:300px;overflow-y:auto;background:#2b1b12;color:#fff2cc;padding:5px;border:1px solid #c9a26b;border-radius:4px;font-family:'Courier New',monospace;font-size:14px;"></div>
+  </div>
+</div>
+
+<script>
+    function closeModal(id){
+  const modal = document.getElementById(id);
+  if(modal) modal.style.display = "none";
+}
+// Variables
+let arenaHistory = JSON.parse(localStorage.getItem("arenaHistory") || "[]");
+let arenaFightsToday = 0;
+const MAX_FIGHTS_PER_DAY = 5;
+
+// Ouvrir arène
+document.getElementById("arenaBtn").onclick = () => {
+  if(!myCharacter){ alert("Crée ton personnage d'abord !"); return; }
+  document.getElementById("arenaModal").style.display = "flex";
+  arenaFightsToday = getTodayFights();
+  updateArenaCounter();
+  loadArenaHistory();
+};
+// Mettre à jour les stats victoires/défaites
+function updateArenaStats(){
+  const today = new Date().toLocaleDateString();
+  let wins = 0;
+  let losses = 0;
+
+  // compter toutes les victoires et défaites
+  arenaHistory.forEach(f => {
+    if(f.victory) wins++;
+    else losses++;
+  });
+
+  const statsEl = document.getElementById("arenaStats");
+  if(statsEl){
+    statsEl.textContent = `Victoires : ${wins} | Défaites : ${losses}`;
+  }
+}
+
+// Modifier saveArenaHistory pour mettre à jour les stats après chaque combat
+function saveArenaHistory(opponentName, duelResult){
+  const today = new Date().toLocaleDateString();
+  arenaHistory.unshift({ date:today, opponent:opponentName, log:duelResult.log, victory:duelResult.victory });
+  if(arenaHistory.length>50) arenaHistory.pop();
+  localStorage.setItem("arenaHistory", JSON.stringify(arenaHistory));
+  loadArenaHistory();
+  updateArenaStats(); // <-- nouveau
+}
+
+// Appeler updateArenaStats quand on ouvre l’Arène
+document.getElementById("arenaBtn").onclick = () => {
+  if(!myCharacter){ alert("Crée ton personnage d'abord !"); return; }
+  document.getElementById("arenaModal").style.display = "flex";
+  arenaFightsToday = getTodayFights();
+  updateArenaCounter();
+  loadArenaHistory();
+  updateArenaStats(); // <-- nouveau
+};
+
+// Compteur combats
+function getTodayFights(){
+  const today = new Date().toLocaleDateString();
+  return arenaHistory.filter(f => f.date === today).length;
+}
+function updateArenaCounter(){
+  document.getElementById("arenaCounter").textContent = 
+    `Combats restants : ${MAX_FIGHTS_PER_DAY - arenaFightsToday}/${MAX_FIGHTS_PER_DAY}`;
+}
+
+// Génération adversaire automatique
+function generateOpponent(){
+  const adversaireNumber = arenaFightsToday + 1;
+  return {
+    name: `Adversaire ${adversaireNumber}`,
+    stats:{
+      force: 5 + Math.floor(Math.random()*5),
+      defense: 2 + Math.floor(Math.random()*3),
+      agilite: 1 + Math.floor(Math.random()*3),
+      pv: 15 + Math.floor(Math.random()*10)
+    }
+  };
+}
+
+// Duel automatique (texte uniquement)
+function duel(player, opponent){
+  let hpP = player.stats.pv;
+  let hpO = opponent.stats.pv;
+  let log = `Combat ${player.name} vs ${opponent.name}\n\n`;
+
+  const maxTurns = 50; // sécurité pour éviter boucle infinie
+  let turn = 0;
+
+  while(hpP > 0 && hpO > 0 && turn < maxTurns){
+    turn++;
+
+    // Player attaque
+    let dmgP = Math.max(1, player.stats.force - opponent.stats.defense); // au moins 1 dégâts
+    if(Math.random()*100 < opponent.stats.agilite*5) dmgP = 1; // jamais 0
+    hpO -= dmgP;
+    hpO = Math.max(0,hpO);
+    log += `${player.name} inflige ${dmgP} à ${opponent.name} (${hpO} PV restant)\n`;
+    if(hpO <= 0) break;
+
+    // Opponent attaque
+    let dmgO = Math.max(1, opponent.stats.force - player.stats.defense); // au moins 1 dégâts
+    if(Math.random()*100 < player.stats.agilite*5) dmgO = 1;
+    hpP -= dmgO;
+    hpP = Math.max(0,hpP);
+    log += `${opponent.name} inflige ${dmgO} à ${player.name} (${hpP} PV restant)\n`;
+  }
+
+  // sécurité si maxTurns atteint
+  if(turn >= maxTurns){
+    log += "\n⚠️ Combat arrêté : trop long, match nul !";
+    return { log, victory: false };
+  }
+
+  const victory = hpP > 0;
+  log += victory ? `\n🏆 ${player.name} gagne !` : `\n💀 ${opponent.name} gagne !`;
+  return { log, victory };
+}
+
+
+// Bouton Combat
+document.getElementById("fightBtn").onclick = async () => {
+  if(!myCharacter){
+    alert("Crée ton personnage d'abord !");
+    return;
+  }
+
+  const today = new Date().toDateString();
+
+  // Initialisation des combats journaliers
+  if(!myCharacter.arena) myCharacter.arena = {date: today, count: 0};
+  if(myCharacter.arena.date !== today) myCharacter.arena = {date: today, count: 0};
+
+  if(myCharacter.arena.count >= MAX_FIGHTS_PER_DAY){
+    alert(`Tu as déjà fait ${MAX_FIGHTS_PER_DAY} combats aujourd'hui !`);
+    return;
+  }
+
+  // Génération adversaire automatique
+  const opponent = {
+    name: `Adversaire ${myCharacter.arena.count + 1}`,
+    stats: {
+      force: 5 + Math.floor(Math.random()*5),
+      defense: 2 + Math.floor(Math.random()*3),
+      agilite: 1 + Math.floor(Math.random()*3),
+      pv: 15 + Math.floor(Math.random()*10)
+    }
+  };
+
+  // Duel texte uniquement (plus de jauges)
+  const result = duel(myCharacter, opponent);
+
+  // Mise à jour du compteur
+  myCharacter.arena.count++;
+  arenaFightsToday = myCharacter.arena.count;
+  updateArenaCounter();
+
+  // Sauvegarde du personnage et historique
+  saveMyCharacter();
+  saveArenaHistory(opponent.name, result);
+};
+
+
+// Historique
+function saveArenaHistory(opponentName, duelResult){
+  const today = new Date().toLocaleDateString();
+  arenaHistory.unshift({ date:today, opponent:opponentName, log:duelResult.log, victory:duelResult.victory });
+  if(arenaHistory.length>50) arenaHistory.pop();
+  localStorage.setItem("arenaHistory", JSON.stringify(arenaHistory));
+  loadArenaHistory();
+}
+
+function loadArenaHistory(){
+  const container = document.getElementById("arenaHistory");
+  container.innerHTML = "";
+  arenaHistory.forEach(f => {
+    const div = document.createElement("div");
+    div.style.marginBottom="10px";
+    div.innerHTML = `<strong>${f.date}</strong> vs ${f.opponent}<br><pre>${f.log}</pre>`;
+    container.appendChild(div);
+  });
+}
+
+// Fermer modale
+function closeModal(id){
+  document.getElementById(id).style.display = "none";
+}
+
+</script>
+
+
+
 
 <!-- CREATION -->
 <div id="creator">
@@ -350,30 +533,7 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
 <button onclick="closeStory()">Fermer</button>
 </div>
 
-<!-- ARENE -->
-<div id="arenaPanel">
-  <h3>Arène</h3>
-  <p id="arenaStatus">Choisis ton adversaire et combat !</p>
 
-  <div style="display:flex;justify-content:space-between;margin:10px 0;">
-    <div>
-      <strong id="arenaPlayerName"></strong>
-      <div class="boss-hp-bar" style="width:120px;">
-        <div id="arenaPlayerHP" class="boss-hp-fill" style="width:100%;"></div>
-      </div>
-    </div>
-    <div>
-      <strong id="arenaOpponentName"></strong>
-      <div class="boss-hp-bar" style="width:120px;">
-        <div id="arenaOpponentHP" class="boss-hp-fill" style="width:100%;"></div>
-      </div>
-    </div>
-  </div>
-
-  <button id="fightBtn">Combattre</button>
-  <pre id="arenaLog"></pre>
-  <button onclick="closeArena()" class="close-btn">Fermer</button>
-</div>
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -908,89 +1068,57 @@ function attackBoss(index){
 
 
 
-// --- Arène ---
-document.getElementById("arenaBtn").onclick = () => {
-  if(!myCharacter) return alert("Crée ton personnage !");
-  document.getElementById("arenaPanel").style.display = "block";
-  document.getElementById("arenaLog").textContent = "";
-  document.getElementById("arenaStatus").textContent = "Prêt pour le combat ?";
-};
 
 
-function closeArena(){ document.getElementById("arenaPanel").style.display="none"; }
-
-document.getElementById("fightBtn").onclick = async () => {
-  if(!myCharacter) return;
-  const today = new Date().toDateString();
-
-  if(!myCharacter.arena) myCharacter.arena = {date:today,count:0};
-  if(myCharacter.arena.date !== today) myCharacter.arena = {date:today,count:0};
-  if(myCharacter.arena.count >= 3){
-    alert("Tu as déjà fait 3 combats aujourd'hui !");
-    return;
-  }
-
-  const opponent = {
-    name:"Ennemi",
-    stats:{force:5,defense:3,agilite:2,pv:20}
-  };
-
-  document.getElementById("arenaPlayerName").textContent = myCharacter.name;
-  document.getElementById("arenaOpponentName").textContent = opponent.name;
-
-  const log = await duelAnimated(myCharacter, opponent);
-
-  myCharacter.arena.count += 1;
-  saveMyCharacter();
-  document.getElementById("arenaLog").textContent = log;
-};
 
 
 async function duelAnimated(p1, p2){
   let hp1 = p1.stats.pv, hp2 = p2.stats.pv;
-  let maxHP1 = hp1, maxHP2 = hp2;
   let log = `Combat ${p1.name} vs ${p2.name}\n\n`;
 
-  const playerHPBar = document.getElementById("arenaPlayerHP");
-  const opponentHPBar = document.getElementById("arenaOpponentHP");
-
-  function updateHP(bar, hp, maxHp){
-    bar.style.width = Math.max(0,(hp/maxHp)*100) + "%";
-  }
-
+  let turn = 1;
   while(hp1>0 && hp2>0){
-    await new Promise(r=>setTimeout(r,500));
+    await new Promise(r=>setTimeout(r, 200));
+
+    // Joueur attaque
     let dmg1 = Math.max(0, p1.stats.force - p2.stats.defense);
-    if(Math.random()*100 < p2.stats.agilite*5) dmg1=0;
+    if(Math.random()*100 < p2.stats.agilite*5) dmg1 = 0;
     hp2 -= dmg1;
-    log += `${p1.name} inflige ${dmg1} à ${p2.name} (${hp2>0?hp2:0} PV restant)\n`;
-    updateHP(opponentHPBar,hp2,maxHP2);
-    await new Promise(r=>setTimeout(r,500));
+    hp2 = Math.max(0,hp2);
+    log += `Tour ${turn} : ${p1.name} inflige ${dmg1} à ${p2.name} (${hp2} PV restant)\n`;
     if(hp2<=0) break;
 
+    // Adversaire attaque
     let dmg2 = Math.max(0, p2.stats.force - p1.stats.defense);
-    if(Math.random()*100 < p1.stats.agilite*5) dmg2=0;
+    if(Math.random()*100 < p1.stats.agilite*5) dmg2 = 0;
     hp1 -= dmg2;
-    log += `${p2.name} inflige ${dmg2} à ${p1.name} (${hp1>0?hp1:0} PV restant)\n`;
-    updateHP(playerHPBar,hp1,maxHP1);
-    await new Promise(r=>setTimeout(r,500));
+    hp1 = Math.max(0,hp1);
+    log += `Tour ${turn} : ${p2.name} inflige ${dmg2} à ${p1.name} (${hp1} PV restant)\n`;
+
+    turn++;
   }
 
-  if(hp1>0) log += `\n${p1.name} gagne le duel !`;
-  else log += `\n${p2.name} gagne le duel !`;
+  if(hp1>0) log += `\n🏆 ${p1.name} gagne le duel !\n`;
+  else log += `\n💀 ${p2.name} gagne le duel !\n`;
 
   return log;
 }
 
+
 // --- Initialisation page ---
 window.onload = () => {
-  loadMyCharacter();
+  // Si myCharacter n'est pas encore défini, on peut juste ne rien faire pour l'instant
+  if(myCharacter) {
+    // tu peux éventuellement refreshSheet(myCharacter);
+  }
+
   loadDragonData(() => {
     renderBossProgress();
     renderBossList();
     initBossesIfEmpty();
   });
 };
+
 // MODALES CREATION / LOGIN
 // -------------------------
 function openCreateAccount(){ document.getElementById("createAccountModal").style.display = "flex"; }
