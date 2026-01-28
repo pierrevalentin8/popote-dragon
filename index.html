@@ -29,6 +29,57 @@ button{
   cursor:pointer;
 }
 button:hover{background:linear-gradient(#c88a45,#8a5535);}
+#adminPanel {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #3b2415;
+  border: 3px solid #c9a26b;
+  padding: 10px;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.7);
+  width: 90%;          /* <- élargit à presque tout l’écran */
+  max-width: 1200px;   /* <- limite pour grands écrans */
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.admin-char-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  margin-bottom: 4px;
+  background: #4a2d1a;
+  border-radius: 4px;
+  flex-wrap: nowrap;       /* <- empêche le retour à la ligne */
+}
+
+.admin-char-info {
+  font-size: 14px;
+  flex: 1;
+  white-space: nowrap;     /* <- tout sur une seule ligne */
+  overflow: hidden;
+  text-overflow: ellipsis; /* <- "..." si texte trop long */
+}
+
+.admin-char-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;         /* <- empêche les boutons de rétrécir */
+}
+
+input[type="number"] {
+  width: 80px;             /* plus large pour mieux voir */
+  padding: 2px 4px;
+  border-radius: 3px;
+  border: 1px solid #c9a26b;
+  background: #2b1b12;
+  color: #f5deb3;
+}
 
 /* Panels */
 #creator,#charSheet,#adminPanel,#storyPanel,#arenaPanel{
@@ -64,16 +115,7 @@ button:hover{background:linear-gradient(#c88a45,#8a5535);}
 }
 
 /* Fiche joueur */
-.char-card {
-  background: linear-gradient(145deg, #2b1d0f, #3b2715);
-  border-radius: 16px;
-  padding: 20px;
-  max-width: 420px;
-  margin: 30px auto;
-  color: #f5e6c8;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-  border: 1px solid rgba(255, 200, 120, 0.2);
-}
+
 .char-card h2 {
   text-align: center;
   font-size: 1.6em;
@@ -197,6 +239,15 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
   border-radius: 12px;
   text-align: center;
 }
+.popote-panel {
+  background: #2b1b12;
+  color: #fff2cc;
+  border: 2px solid #c9a26b;
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.7);
+  font-family: "Georgia", serif;
+}
+
 
 
 
@@ -205,6 +256,7 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
 <body>
 <!-- Bouton Créer un compte -->
 <button id="createAccountBtn" class="main-popote-btn" onclick="openCreateAccount()">Créer un compte</button>
+
 
 
 <!-- MODALE CREER COMPTE -->
@@ -240,7 +292,7 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
 </div>
 
 <button id="backToPopote" class="floating-back-btn">🏠 Popote & Compagnie</button>
-<div id="dragonFooter">Imaginé et créé par PM avec l'aide de Chat GPT - MAJ 24</div>
+<div id="dragonFooter">Imaginé et créé par PM avec l'aide de Chat GPT - MAJ 26</div>
 
 
 <h1>🍗 Popote & Dragon 🐉</h1>
@@ -266,6 +318,7 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
 </div>
 
 <script>
+    
     function closeModal(id){
   const modal = document.getElementById(id);
   if(modal) modal.style.display = "none";
@@ -275,14 +328,9 @@ let arenaHistory = JSON.parse(localStorage.getItem("arenaHistory") || "[]");
 let arenaFightsToday = 0;
 const MAX_FIGHTS_PER_DAY = 5;
 
-// Ouvrir arène
-document.getElementById("arenaBtn").onclick = () => {
-  if(!myCharacter){ alert("Crée ton personnage d'abord !"); return; }
-  document.getElementById("arenaModal").style.display = "flex";
-  arenaFightsToday = getTodayFights();
-  updateArenaCounter();
-  loadArenaHistory();
-};
+
+
+
 // Mettre à jour les stats victoires/défaites
 function updateArenaStats(){
   const today = new Date().toLocaleDateString();
@@ -320,6 +368,8 @@ document.getElementById("arenaBtn").onclick = () => {
   loadArenaHistory();
   updateArenaStats(); // <-- nouveau
 };
+
+
 
 // Compteur combats
 function getTodayFights(){
@@ -429,14 +479,6 @@ document.getElementById("fightBtn").onclick = async () => {
 
 
 // Historique
-function saveArenaHistory(opponentName, duelResult){
-  const today = new Date().toLocaleDateString();
-  arenaHistory.unshift({ date:today, opponent:opponentName, log:duelResult.log, victory:duelResult.victory });
-  if(arenaHistory.length>50) arenaHistory.pop();
-  localStorage.setItem("arenaHistory", JSON.stringify(arenaHistory));
-  loadArenaHistory();
-}
-
 function loadArenaHistory(){
   const container = document.getElementById("arenaHistory");
   container.innerHTML = "";
@@ -448,10 +490,6 @@ function loadArenaHistory(){
   });
 }
 
-// Fermer modale
-function closeModal(id){
-  document.getElementById(id).style.display = "none";
-}
 
 </script>
 
@@ -493,7 +531,12 @@ function closeModal(id){
       </div>
       <p><strong>Description :</strong></p>
       <p id="sheetDesc"></p>
+
+      <!-- NOUVEAU : Dates -->
+      <p><strong>Créé le :</strong> <span id="sheetCreatedAt">inconnue</span></p>
+      <p><strong>Dernière connexion :</strong> <span id="sheetLastLogin">jamais</span></p>
     </div>
+
     <h3>Stats</h3>
     <div class="stats-container">
       <div class="stat-line">Force : <span id="sheetForce"></span>
@@ -513,10 +556,12 @@ function closeModal(id){
         <button class="stat-btn" onclick="changeSheetStat('agilite',-1)">-</button>
       </div>
     </div>
-    <p>Points disponibles : <span id="freePoints"></span></p>
+
+    <p style="font-weight:bold; color:#ffd700;">Points disponibles : <span id="freePoints"></span></p>
     <button onclick="closeSheet()" class="close-btn">Fermer</button>
   </div>
 </div>
+
 
 <!-- ADMIN -->
 <div id="adminPanel">
@@ -532,6 +577,7 @@ function closeModal(id){
 <div id="bossList"></div>
 <button onclick="closeStory()">Fermer</button>
 </div>
+
 
 
 <!-- FIREBASE -->
@@ -551,9 +597,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth(); //
-
-
-
 
 
 const createAccountBtn = document.getElementById("createAccountBtn");
@@ -609,21 +652,6 @@ loginBtn.addEventListener("click", () => {
     }
 });
 
-
-// Fonction pour gérer bouton connexion / déconnexion
-function loginClick() {
-    const user = firebase.auth().currentUser;
-    if (user) {
-        // Déconnexion
-        firebase.auth().signOut().then(() => {
-            alert("Déconnecté !");
-        });
-    } else {
-        // Connexion
-        openLogin();  // ouvre la modale connexion
-    }
-}
-
     
 // Bouton retour vers Popote & Compagnie
 document.getElementById("backToPopote").onclick = () => {
@@ -656,7 +684,7 @@ let myCharacter = null;
 let stats={force:0,pv:0,defense:0,agilite:0};
 let totalPoints=10;
 
-const ADMIN_EMAIL = "pierre.valentin8@gmail.com";
+
 // --- Création personnage ---
 document.getElementById("createBtn").onclick = () => { document.getElementById("creator").style.display = "block"; };
 function changeStat(stat, val){
@@ -670,48 +698,52 @@ function changeStat(stat, val){
   document.getElementById(stat).textContent = stats[stat];
   document.getElementById("pointsLeft").textContent = totalPoints;
 }
+</script>
+<script>
+// --- Validation personnage ---
+function validateCharacter() {
+  const name = document.getElementById("name").value.trim();
+  const classe = document.getElementById("class").value;
+  const desc = document.getElementById("desc").value.trim();
 
-function validateCharacter(){
- const user = auth.currentUser;
-if(!user){
-  alert("Tu dois être connecté pour créer un personnage !");
-  return;
-}
+  if (!name || !classe || !desc) {
+    alert("Veuillez remplir tous les champs !");
+    return;
+  }
 
-
-  if(totalPoints !== 0){
-    alert("Utilise tous les points !");
+  const user = auth.currentUser;
+  if (!user) {
+    alert("Vous devez être connecté pour créer un personnage.");
     return;
   }
 
   const newChar = {
-    name: document.getElementById("name").value || "Héros",
-    cls: document.getElementById("class").value,
-    desc: document.getElementById("desc").value || "",
-    stats: {...stats},
+    name: name,
+    cls: classe,
+    desc: desc,
     level: 1,
     xp: 0,
-    freePoints: 0,
-    lastAttack: {},
-    arena: {date:null,count:0}
+    freePoints: totalPoints,
+    stats: {...stats},
+    ownerUid: user.uid,
+    createdAt: new Date()
   };
 
   db.collection("popoteDragonCharacters").doc(user.uid).set(newChar)
     .then(() => {
-myCharacter = newChar;
-
-document.getElementById("createBtn").style.display = "none";
-document.getElementById("playerBtn").textContent = newChar.name;
-document.getElementById("playerBtn").style.display = "inline-block";
-document.getElementById("creator").style.display = "none";
-alert("Personnage créé !");
-
+      myCharacter = newChar;
+      document.getElementById("creator").style.display = "none";
+      alert("Personnage créé !");
+      refreshSheet(myCharacter);
     })
     .catch(err => {
-      console.error("Erreur création personnage :", err);
-      alert("Erreur lors de la création");
+      console.error(err);
+      alert("Erreur lors de la création du personnage.");
     });
 }
+</script>
+
+<script>
 async function saveMyCharacter(){
   const user = auth.currentUser;
   if(!user || !myCharacter) return;
@@ -753,43 +785,47 @@ document.getElementById("playerBtn").onclick = () => {
 }
 
 
-function refreshSheet(c){
+async function refreshSheet(c){
   myCharacter = c;
 
-  document.getElementById("sheetName").textContent=c.name;
-  document.getElementById("sheetClass").textContent=c.cls;
-  document.getElementById("sheetLevel").textContent=c.level;
-  document.getElementById("sheetXP").textContent=c.xp+" XP";
-  document.getElementById("sheetDesc").textContent=c.desc;
-  document.getElementById("sheetForce").textContent=c.stats.force;
-  document.getElementById("sheetPV").textContent=c.stats.pv;
-  document.getElementById("sheetDefense").textContent=c.stats.defense;
-  document.getElementById("sheetAgilite").textContent=c.stats.agilite;
-  document.getElementById("freePoints").textContent=c.freePoints;
-  let xpForNext=xpForNextLevel(c.level);
-  document.getElementById("sheetXPBar").style.width=Math.min(100,(c.xp/xpForNext)*100)+"%";
-}
-async function changeSheetStat(stat, val){
-  if(!myCharacter) return;
-  if(val === 1 && myCharacter.freePoints <= 0) return;
-  if(val === -1 && myCharacter.stats[stat] <= 0) return;
+  document.getElementById("sheetName").textContent = c.name;
+  document.getElementById("sheetClass").textContent = c.cls;
+  document.getElementById("sheetLevel").textContent = c.level;
+  document.getElementById("sheetXP").textContent = c.xp + " XP";
+  document.getElementById("sheetDesc").textContent = c.desc;
+  document.getElementById("sheetForce").textContent = c.stats.force;
+  document.getElementById("sheetPV").textContent = c.stats.pv;
+  document.getElementById("sheetDefense").textContent = c.stats.defense;
+  document.getElementById("sheetAgilite").textContent = c.stats.agilite;
+  document.getElementById("freePoints").textContent = c.freePoints;
 
-  myCharacter.stats[stat] += val;
-  myCharacter.freePoints -= val;
+  // --- XP Bar ---
+  const xpForNext = xpForNextLevel(c.level);
+  document.getElementById("sheetXPBar").style.width = Math.min(100, (c.xp / xpForNext) * 100) + "%";
 
-  const user = auth.currentUser;
-  if(!user) return;
-
-  try{
-    await db.collection("popoteDragonCharacters").doc(user.uid).update({
-      stats: myCharacter.stats,
-      freePoints: myCharacter.freePoints
-    });
-    refreshSheet(myCharacter);
-  }catch(e){
-    console.error("Erreur maj stats :", e);
+  // --- Dates ---
+  // Date de création
+  let createdText = "inconnue";
+  if(c.createdAt){
+    const d = c.createdAt.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
+    createdText = d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR");
   }
+  document.getElementById("sheetCreatedAt").textContent = createdText;
+
+  // Dernière connexion
+  let lastLoginText = "jamais";
+  try {
+    const userDoc = await db.collection("users").doc(c.ownerUid).get();
+    if(userDoc.exists && userDoc.data().lastLogin){
+      const d = userDoc.data().lastLogin.toDate ? userDoc.data().lastLogin.toDate() : new Date(userDoc.data().lastLogin);
+      lastLoginText = d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR");
+    }
+  } catch(e){
+    console.error("Erreur récupération dernière connexion :", e);
+  }
+  document.getElementById("sheetLastLogin").textContent = lastLoginText;
 }
+
 
 
 
@@ -823,85 +859,146 @@ function loadDragonData(callback){
 // --- Admin simplifié basé sur l'auth Popote & Compagnie ---
 document.getElementById("adminBtn").style.display = "none";
 
-auth.onAuthStateChanged(user=>{
-  if(user && user.email===ADMIN_EMAIL){
-    document.getElementById("adminBtn").style.display="inline-block";
+// Vérifier si l'utilisateur est admin via le champ isAdmin dans Firestore
+auth.onAuthStateChanged(async (user) => {
+  if (!user) {
+    document.getElementById("createBtn").style.display = "inline-block";
+    document.getElementById("playerBtn").style.display = "none";
+    document.getElementById("adminBtn").style.display = "none";
+    return;
+  }
+
+  // Masquer le bouton par défaut
+  document.getElementById("adminBtn").style.display = "none";
+
+  // Charger le personnage pour voir s'il est admin
+  try {
+    const doc = await db.collection("popoteDragonCharacters").doc(user.uid).get();
+    if (doc.exists) {
+      myCharacter = doc.data();
+      document.getElementById("createBtn").style.display = "none";
+      document.getElementById("playerBtn").textContent = myCharacter.name;
+      document.getElementById("playerBtn").style.display = "inline-block";
+
+      // Afficher bouton Admin si isAdmin = true
+      if (myCharacter.isAdmin) {
+        document.getElementById("adminBtn").style.display = "inline-block";
+      }
+    } else {
+      myCharacter = null;
+      document.getElementById("createBtn").style.display = "inline-block";
+      document.getElementById("playerBtn").style.display = "none";
+    }
+  } catch (e) {
+    console.error("Erreur récupération personnage :", e);
   }
 });
-auth.onAuthStateChanged(user => {
-  if(user){
-    document.getElementById("createBtn").style.display="inline-block";
-  } else {
-    document.getElementById("createBtn").style.display="none";
-    document.getElementById("playerBtn").style.display="none";
-  }
-});
 
 
 
-document.getElementById("adminBtn").onclick = ()=>{
+// Bouton admin
+document.getElementById("adminBtn").onclick = () => {
   renderAdminList();
-  document.getElementById("adminPanel").style.display="block";
-}
+  document.getElementById("adminPanel").style.display = "block";
+};
 
-function renderAdminList(){
-  const container=document.getElementById("adminCharList");
-  container.innerHTML="";
 
-  db.collection("popoteDragonCharacters").get().then(snapshot=>{
-    snapshot.forEach(doc=>{
-      const c=doc.data();
-      const div=document.createElement("div");
-      div.className="admin-char-line";
+async function renderAdminList(){
+  const container = document.getElementById("adminCharList");
+  container.innerHTML = "";
 
-      const info=document.createElement("div");
-      info.className="admin-char-info";
-      info.textContent=`${c.name} (Niv ${c.level} - XP ${c.xp})`;
+  const charsSnap = await db.collection("popoteDragonCharacters").get();
+  const usersSnap = await db.collection("users").get();
 
-      const actions=document.createElement("div");
-      actions.className="admin-char-actions";
+  // Créer un map uid -> user
+  const usersMap = {};
+  usersSnap.forEach(doc => {
+    usersMap[doc.id] = doc.data();
+  });
 
-      const xpInput=document.createElement("input");
-      xpInput.type="number";
-      xpInput.placeholder="XP";
+  charsSnap.forEach(doc => {
+    const c = doc.data();
+    const div = document.createElement("div");
+    div.className = "admin-char-line";
 
-      const btnXP=document.createElement("button");
-      btnXP.textContent="Donner XP";
-      btnXP.onclick=async()=>{
-        const xp=parseInt(xpInput.value);
-        if(isNaN(xp) || xp<=0) return alert("XP invalide");
+    const info = document.createElement("div");
+    info.className = "admin-char-info";
 
-        c.xp += xp;
-        checkLevelUp(c);
+    // Date de création
+    let createdAtText = "inconnue";
+    if (c.createdAt) {
+      const d = c.createdAt.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
+      createdAtText = d.toLocaleDateString("fr-FR");
+    }
 
-        await db.collection("popoteDragonCharacters").doc(doc.id).update({
-          xp:c.xp,
-          level:c.level,
-          freePoints:c.freePoints
-        });
+    // Dernière connexion
+    let lastLoginText = "jamais";
+    const userData = usersMap[c.ownerUid];
+    if (userData && userData.lastLogin) {
+      const d = userData.lastLogin.toDate
+        ? userData.lastLogin.toDate()
+        : new Date(userData.lastLogin);
+      lastLoginText = d.toLocaleDateString("fr-FR");
+    }
 
-        renderAdminList();
-      };
+    info.textContent = `${c.name} | Niv ${c.level} | XP ${c.xp} | Créé : ${createdAtText} | Dernière connexion : ${lastLoginText}`;
 
-      const btnDel=document.createElement("button");
-      btnDel.textContent="Supprimer";
-      btnDel.onclick=async()=>{
-        if(confirm(`Supprimer ${c.name} ?`)){
-          await db.collection("popoteDragonCharacters").doc(doc.id).delete();
-          renderAdminList();
-        }
-      };
 
-      actions.appendChild(xpInput);
-      actions.appendChild(btnXP);
-      actions.appendChild(btnDel);
+    const actions = document.createElement("div");
+    actions.className = "admin-char-actions";
 
-      div.appendChild(info);
-      div.appendChild(actions);
-      container.appendChild(div);
-    });
+    const xpInput = document.createElement("input");
+    xpInput.type = "number";
+    xpInput.placeholder = "XP";
+
+    const btnXP = document.createElement("button");
+    btnXP.textContent = "Donner XP";
+    btnXP.onclick = async () => {
+      const xp = parseInt(xpInput.value);
+      if (isNaN(xp) || xp <= 0) return alert("XP invalide");
+
+      c.xp += xp;
+      checkLevelUp(c);
+
+      await db.collection("popoteDragonCharacters").doc(doc.id).update({
+        xp: c.xp,
+        level: c.level,
+        freePoints: c.freePoints
+      });
+
+      renderAdminList();
+    };
+
+    const btnDel = document.createElement("button");
+btnDel.textContent = "❌";
+btnDel.style.background = "#c62828";  // rouge
+btnDel.style.color = "#fff";
+btnDel.style.border = "none";
+btnDel.style.borderRadius = "4px";
+btnDel.style.padding = "4px 8px";
+btnDel.style.cursor = "pointer";
+btnDel.title = "Supprimer ce personnage";  // infobulle au survol
+btnDel.onclick = async () => {
+  if(confirm(`Supprimer ${c.name} ?`)){
+    await db.collection("popoteDragonCharacters").doc(doc.id).delete();
+    renderAdminList();
+  }
+};
+
+
+    actions.appendChild(xpInput);
+    actions.appendChild(btnXP);
+    actions.appendChild(btnDel);
+
+    div.appendChild(info);
+    div.appendChild(actions);
+    container.appendChild(div);
   });
 }
+
+
+
+
 
 
 
@@ -1144,18 +1241,33 @@ auth.createUserWithEmailAndPassword(email, password)
 
 // Connexion via Firebase
 function login() {
-    const email = document.getElementById("loginEmail").value.trim();
-    const password = document.getElementById("loginPassword").value;
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
 
-    if (!email || !password) {
-        alert("Veuillez remplir tous les champs.");
-        return;
-    }
+  if (!email || !password) {
+    alert("Veuillez remplir tous les champs.");
+    return;
+  }
 
-  auth.signInWithEmailAndPassword(email,password)
-      .then(()=> { alert("Connecté !"); closeLogin(); loadCharacterFromFirebase(); })
-      .catch(err=>alert("Erreur : "+err.message));
+  auth.signInWithEmailAndPassword(email, password)
+    .then(async (cred) => {
+      alert("Connecté !");
+      closeLogin();
+
+      const user = cred.user;
+
+      // 🔽 Sauvegarde de la dernière connexion
+      await db.collection("users").doc(user.uid).set({
+        email: user.email,
+        lastLogin: new Date()
+      }, { merge: true });
+
+     updatePlayerButton();
+
+    })
+    .catch(err => alert("Erreur : " + err.message));
 }
+
 
 
 
