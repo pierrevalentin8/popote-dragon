@@ -274,7 +274,8 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
   </div>
 </div>
 <!-- Bouton Connexion / Déconnexion -->
-<button id="loginBtn" class="main-popote-btn">Connexion</button>
+<button id="authBtn">🔑 Connexion</button>
+
 
 <!-- MODALE CONNEXION -->
 <div class="modal" id="loginModal">
@@ -292,7 +293,7 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
 </div>
 
 <button id="backToPopote" class="floating-back-btn">🏠 Popote & Compagnie</button>
-<div id="dragonFooter">Imaginé et créé par PM avec l'aide de Chat GPT - MAJ 26</div>
+<div id="dragonFooter">Imaginé et créé par PM avec l'aide de Chat GPT - MAJ 29</div>
 
 
 <h1>🍗 Popote & Dragon 🐉</h1>
@@ -304,7 +305,26 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
 
 <!-- MODALE ARENE simplifiée -->
 <div class="modal" id="arenaModal">
-  <div class="modal-content" style="max-width:500px;">
+  <div class="modal-content" style="
+      max-width: 90%;
+      max-height: 90vh;
+      background: #3b2415;
+      border: 3px solid #c9a26b;
+      padding: 10px;
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.7);
+      overflow: auto;
+  ">
+<img src="Arène 1.png" alt="Arène" style="
+    display: block;
+    margin: 10px auto;
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    border: 2px solid #c9a26b;
+    border-radius: 6px;
+">
+
     <h3>Arène</h3>
     <button onclick="closeModal('arenaModal')">🔙 Retour</button>
 <p id="arenaStats">Victoires : 0 | Défaites : 0</p>
@@ -318,7 +338,65 @@ textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid
 </div>
 
 <script>
-    
+// Nettoie complètement l'historique de l'arène
+// Nettoie complètement l'historique de l'arène
+async function cleanArenaHistory() {
+  let arenaHistory = JSON.parse(localStorage.getItem("arenaHistory") || "[]");
+
+  // Récupérer tous les personnages existants dans Firestore
+  const snapshot = await db.collection("popoteDragonCharacters").get();
+  const existingNames = snapshot.docs.map(doc => doc.data().name);
+
+  // Ne garder que les entrées où le joueur ET l'adversaire existent encore
+  const cleanedHistory = arenaHistory.filter(f => 
+    existingNames.includes(f.player) && existingNames.includes(f.opponent)
+  );
+
+  // Sauvegarder dans localStorage
+  localStorage.setItem("arenaHistory", JSON.stringify(cleanedHistory));
+
+  // Mettre à jour la variable globale
+  arenaHistory = cleanedHistory;
+
+  // Recharger affichage si l'arène est ouverte
+  if(document.getElementById("arenaHistory")){
+    loadArenaHistory();
+    updateArenaStats();
+  }
+
+  return cleanedHistory;
+}
+
+
+window.onload = async () => {
+  await cleanArenaHistory(); // <-- nettoie tout l'historique dès le démarrage
+  renderBossProgress();
+  renderBossList();
+  initBossesIfEmpty();
+};
+
+
+
+
+// Modification du bouton Arène
+document.getElementById("arenaBtn").onclick = async () => {
+  if(!myCharacter){ 
+    alert("Crée ton personnage d'abord !"); 
+    return; 
+  }
+
+  document.getElementById("arenaModal").style.display = "flex";
+
+  // Nettoyer l'historique avant affichage
+  arenaHistory = await cleanArenaHistory();
+  
+  arenaFightsToday = getTodayFights();
+  updateArenaCounter();
+  loadArenaHistory();
+  updateArenaStats();
+};
+
+
     function closeModal(id){
   const modal = document.getElementById(id);
   if(modal) modal.style.display = "none";
@@ -350,14 +428,21 @@ function updateArenaStats(){
 }
 
 // Modifier saveArenaHistory pour mettre à jour les stats après chaque combat
-function saveArenaHistory(opponentName, duelResult){
+function saveArenaHistory(opponentName, duelResult) {
   const today = new Date().toLocaleDateString();
-  arenaHistory.unshift({ date:today, opponent:opponentName, log:duelResult.log, victory:duelResult.victory });
-  if(arenaHistory.length>50) arenaHistory.pop();
+  arenaHistory.unshift({ 
+    date: today, 
+    opponent: opponentName, 
+    player: myCharacter ? myCharacter.name : "Inconnu", // <-- ajout du joueur
+    log: duelResult.log, 
+    victory: duelResult.victory 
+  });
+  if(arenaHistory.length > 50) arenaHistory.pop();
   localStorage.setItem("arenaHistory", JSON.stringify(arenaHistory));
   loadArenaHistory();
-  updateArenaStats(); // <-- nouveau
+  updateArenaStats();
 }
+
 
 // Appeler updateArenaStats quand on ouvre l’Arène
 document.getElementById("arenaBtn").onclick = () => {
@@ -567,6 +652,10 @@ function loadArenaHistory(){
 <div id="adminPanel">
 <h3>Maître du Jeu</h3>
 <div id="adminCharList"></div>
+<button id="cleanArenaBtn" style="margin-top:10px; background:#c62828; color:#fff; padding:5px 10px; border:none; border-radius:4px; cursor:pointer;">
+  🧹 Nettoyer arène
+</button>
+
 <button onclick="closeAdmin()">Fermer</button>
 </div>
 
@@ -577,6 +666,7 @@ function loadArenaHistory(){
 <div id="bossList"></div>
 <button onclick="closeStory()">Fermer</button>
 </div>
+
 
 
 
@@ -601,6 +691,29 @@ const auth = firebase.auth(); //
 
 const createAccountBtn = document.getElementById("createAccountBtn");
 const loginBtn = document.getElementById("loginBtn");
+if (loginBtn) {
+  loginBtn.addEventListener("click", () => {
+    const user = firebase.auth().currentUser;
+    if (user) {
+      firebase.auth().signOut();
+    } else {
+      openLogin();
+    }
+  });
+}
+
+// Nettoyer tout l'historique de l'arène
+document.getElementById("cleanArenaBtn").onclick = () => {
+  if(confirm("Supprimer tout l'historique de l'arène ? Cette action est irréversible !")) {
+    arenaHistory = []; // vide le tableau global
+    localStorage.setItem("arenaHistory", JSON.stringify(arenaHistory)); // sauvegarde
+    loadArenaHistory(); // rafraîchit la fenêtre arène
+    updateArenaStats(); // met à jour les stats victoires/défaites
+    alert("Historique de l'arène supprimé ✅");
+  }
+};
+
+
 // --- Gestion affichage bouton joueur / création ---
 async function updatePlayerButton() {
     const user = auth.currentUser;
@@ -633,24 +746,55 @@ async function updatePlayerButton() {
 
 // Observer état connexion Firebase
 auth.onAuthStateChanged(user => {
-    updatePlayerButton();
+  if (user) {
+    // Utilisateur connecté → on cache le bouton
+    if (createAccountBtn) {
+      createAccountBtn.style.display = "none";
+    }
+  } else {
+    // Utilisateur déconnecté → on montre le bouton
+    if (createAccountBtn) {
+      createAccountBtn.style.display = "inline-block";
+    }
+  }
 });
+document.addEventListener("DOMContentLoaded", () => {
+  const authBtn = document.getElementById("authBtn");
+
+  auth.onAuthStateChanged(user => {
+    if (!authBtn) return;
+
+    if (user) {
+      authBtn.textContent = "🚪 Déconnexion";
+      authBtn.onclick = () => auth.signOut();
+    } else {
+      authBtn.textContent = "🔑 Connexion";
+      authBtn.onclick = () => {
+        document.getElementById("loginModal").style.display = "flex";
+      };
+    }
+  });
+});
+
+
+
 
 
 
 // Gérer clic sur le bouton connexion/déconnexion
-loginBtn.addEventListener("click", () => {
+if (loginBtn) {
+  loginBtn.addEventListener("click", () => {
     const user = firebase.auth().currentUser;
     if (user) {
-        // Déconnexion
-        firebase.auth().signOut()
-            .then(() => alert("Déconnecté !"))
-            .catch(err => console.error("Erreur déconnexion :", err));
+      firebase.auth().signOut()
+        .then(() => alert("Déconnecté !"))
+        .catch(err => console.error("Erreur déconnexion :", err));
     } else {
-        // Connexion
-        openLogin(); // ouvre votre modal de connexion
+      openLogin();
     }
-});
+  });
+}
+
 
     
 // Bouton retour vers Popote & Compagnie
@@ -690,14 +834,14 @@ document.getElementById("createBtn").onclick = () => { document.getElementById("
 function changeStat(stat, val){
   if(val === 1 && totalPoints <= 0) return;
   if(val === -1 && stats[stat] <= 0) return;
-  if(val === -1 && totalPoints >= 10) return; // empêche dépasser le max initial
 
   stats[stat] += val;
-  totalPoints -= val;
+  totalPoints = Math.max(0, totalPoints - val);
 
   document.getElementById(stat).textContent = stats[stat];
   document.getElementById("pointsLeft").textContent = totalPoints;
 }
+
 </script>
 <script>
 // --- Validation personnage ---
@@ -730,12 +874,14 @@ function validateCharacter() {
   };
 
   db.collection("popoteDragonCharacters").doc(user.uid).set(newChar)
-    .then(() => {
-      myCharacter = newChar;
-      document.getElementById("creator").style.display = "none";
-      alert("Personnage créé !");
-      refreshSheet(myCharacter);
-    })
+  .then(() => {
+    myCharacter = newChar;
+    updatePlayerButton(); // <--- ajout pour cohérence
+    document.getElementById("creator").style.display = "none";
+    alert("Personnage créé !");
+    refreshSheet(myCharacter);
+  })
+
     .catch(err => {
       console.error(err);
       alert("Erreur lors de la création du personnage.");
@@ -903,103 +1049,177 @@ document.getElementById("adminBtn").onclick = () => {
 };
 
 
-async function renderAdminList(){
+async function renderAdminList() {
   const container = document.getElementById("adminCharList");
   container.innerHTML = "";
+    
+  try {
+    const snapshot = await db.collection("popoteDragonCharacters").get();
 
-  const charsSnap = await db.collection("popoteDragonCharacters").get();
-  const usersSnap = await db.collection("users").get();
-
-  // Créer un map uid -> user
-  const usersMap = {};
-  usersSnap.forEach(doc => {
-    usersMap[doc.id] = doc.data();
-  });
-
-  charsSnap.forEach(doc => {
-    const c = doc.data();
-    const div = document.createElement("div");
-    div.className = "admin-char-line";
-
-    const info = document.createElement("div");
-    info.className = "admin-char-info";
-
-    // Date de création
-    let createdAtText = "inconnue";
-    if (c.createdAt) {
-      const d = c.createdAt.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
-      createdAtText = d.toLocaleDateString("fr-FR");
-    }
-
-    // Dernière connexion
-    let lastLoginText = "jamais";
-    const userData = usersMap[c.ownerUid];
-    if (userData && userData.lastLogin) {
-      const d = userData.lastLogin.toDate
-        ? userData.lastLogin.toDate()
-        : new Date(userData.lastLogin);
-      lastLoginText = d.toLocaleDateString("fr-FR");
-    }
-
-    info.textContent = `${c.name} | Niv ${c.level} | XP ${c.xp} | Créé : ${createdAtText} | Dernière connexion : ${lastLoginText}`;
-
-
-    const actions = document.createElement("div");
-    actions.className = "admin-char-actions";
-
-    const xpInput = document.createElement("input");
-    xpInput.type = "number";
-    xpInput.placeholder = "XP";
-
-    const btnXP = document.createElement("button");
-    btnXP.textContent = "Donner XP";
-    btnXP.onclick = async () => {
-      const xp = parseInt(xpInput.value);
-      if (isNaN(xp) || xp <= 0) return alert("XP invalide");
-
-      c.xp += xp;
-      checkLevelUp(c);
-
-      await db.collection("popoteDragonCharacters").doc(doc.id).update({
-        xp: c.xp,
-        level: c.level,
-        freePoints: c.freePoints
+    // Charger tous les users pour lastLogin
+    const uids = snapshot.docs.map(doc => doc.data().ownerUid);
+    let usersMap = {};
+    if (uids.length > 0) {
+      const usersSnapshot = await db.collection("users")
+        .where(firebase.firestore.FieldPath.documentId(), "in", uids)
+        .get();
+      usersSnapshot.forEach(doc => {
+        usersMap[doc.id] = doc.data();
       });
+    }
 
-      renderAdminList();
-    };
+    snapshot.forEach(doc => {
+      const c = doc.data();
 
-    const btnDel = document.createElement("button");
-btnDel.textContent = "❌";
-btnDel.style.background = "#c62828";  // rouge
-btnDel.style.color = "#fff";
-btnDel.style.border = "none";
-btnDel.style.borderRadius = "4px";
-btnDel.style.padding = "4px 8px";
-btnDel.style.cursor = "pointer";
-btnDel.title = "Supprimer ce personnage";  // infobulle au survol
-btnDel.onclick = async () => {
-  if(confirm(`Supprimer ${c.name} ?`)){
+      // Conteneur principal compact
+      const div = document.createElement("div");
+      div.style.background = "#4a2d1a";
+      div.style.borderRadius = "6px";
+      div.style.padding = "6px 10px";
+      div.style.marginBottom = "6px";
+      div.style.display = "flex";
+      div.style.flexDirection = "column";
+      div.style.fontFamily = "'Courier New', monospace";
+
+      // Ligne 1 : Nom / Niv / XP + boutons
+      const line1 = document.createElement("div");
+      line1.style.display = "flex";
+      line1.style.justifyContent = "space-between";
+      line1.style.alignItems = "center";
+      line1.style.width = "100%";
+
+      const info1 = document.createElement("div");
+      info1.textContent = `${c.name} | Niv ${c.level} | XP ${c.xp}`;
+      info1.style.fontWeight = "bold";
+      info1.style.color = "#ffd700";
+      info1.style.textAlign = "left";
+      line1.appendChild(info1);
+
+      // Boutons
+      const actions = document.createElement("div");
+      actions.style.display = "flex";
+      actions.style.gap = "4px";
+      actions.style.alignItems = "center";
+
+      const xpInput = document.createElement("input");
+      xpInput.type = "number";
+      xpInput.placeholder = "XP";
+      xpInput.style.width = "50px";
+      xpInput.style.fontSize = "12px";
+      xpInput.style.padding = "2px";
+
+      const btnXP = document.createElement("button");
+      btnXP.textContent = "Donner XP";
+      btnXP.style.fontSize = "12px";
+      btnXP.onclick = async () => {
+        const xp = parseInt(xpInput.value);
+        if (isNaN(xp) || xp <= 0) return alert("XP invalide");
+
+        c.xp += xp;
+        checkLevelUp(c);
+
+        await db.collection("popoteDragonCharacters").doc(doc.id).update({
+          xp: c.xp,
+          level: c.level,
+          freePoints: c.freePoints
+        });
+
+        renderAdminList();
+      };
+
+      const btnDel = document.createElement("button");
+      btnDel.textContent = "❌";
+      btnDel.style.background = "#c62828";
+      btnDel.style.color = "#fff";
+      btnDel.style.border = "none";
+      btnDel.style.borderRadius = "4px";
+      btnDel.style.padding = "2px 6px";
+      btnDel.style.cursor = "pointer";
+      btnDel.title = "Supprimer ce personnage";
+      btnDel.onclick = async () => {
+  if (confirm(`Supprimer ${c.name} ?`)) {
+    // Supprimer le personnage
     await db.collection("popoteDragonCharacters").doc(doc.id).delete();
+
+    // Supprimer toutes les entrées de l'arène où il apparaît
+    arenaHistory = arenaHistory.filter(f => f.opponent !== c.name && f.player !== c.name);
+    localStorage.setItem("arenaHistory", JSON.stringify(arenaHistory));
+
+    // Recharger affichages
     renderAdminList();
+    loadArenaHistory();
+    updateArenaStats();
   }
 };
 
 
-    actions.appendChild(xpInput);
-    actions.appendChild(btnXP);
-    actions.appendChild(btnDel);
 
-    div.appendChild(info);
-    div.appendChild(actions);
-    container.appendChild(div);
-  });
+
+      actions.appendChild(xpInput);
+      actions.appendChild(btnXP);
+      actions.appendChild(btnDel);
+
+      line1.appendChild(actions);
+      div.appendChild(line1);
+
+      // Ligne 2 : Dates
+      const line2 = document.createElement("div");
+      line2.style.fontSize = "12px";
+      line2.style.color = "#fff2cc";
+      line2.style.textAlign = "left";
+      line2.style.marginTop = "2px";
+
+      // Date création
+      let createdAtText = "inconnue";
+      if (c.createdAt) {
+        const d = c.createdAt.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
+        createdAtText = d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR");
+      }
+
+      // Dernière connexion
+      let lastLoginText = "jamais";
+      if (c.ownerUid && usersMap[c.ownerUid] && usersMap[c.ownerUid].lastLogin) {
+        const d = usersMap[c.ownerUid].lastLogin.toDate
+          ? usersMap[c.ownerUid].lastLogin.toDate()
+          : new Date(usersMap[c.ownerUid].lastLogin);
+        lastLoginText = d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR");
+      }
+
+      line2.textContent = `Créé : ${createdAtText} | Dernière connexion : ${lastLoginText}`;
+      div.appendChild(line2);
+
+      container.appendChild(div);
+    });
+
+  } catch (e) {
+    console.error("Erreur MJ :", e);
+    alert("Impossible de charger les personnages : " + e.message);
+  }
 }
 
 
 
 
 
+
+
+// Vérifie si l'utilisateur est admin et affiche le bouton MJ
+function checkAdminButton() {
+  const user = auth.currentUser;
+  const ADMIN_EMAIL = "pierre.valentin8@gmail.com"; 
+
+  if (user && user.email === ADMIN_EMAIL) {
+    document.getElementById("adminBtn").style.display = "inline-block";
+  } else {
+    document.getElementById("adminBtn").style.display = "none";
+  }
+}
+
+// Après création de personnage ou connexion
+auth.onAuthStateChanged(user => {
+  updatePlayerButton();
+  checkAdminButton();
+});
 
 
 function closeAdmin(){ 
