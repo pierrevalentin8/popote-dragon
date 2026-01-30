@@ -3,1497 +3,880 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Popote & Dragon</title>
+<title>Popote & Dragons</title>
 <style>
-body {
-  margin:0;
-  font-family:'Courier New',monospace;
-  background:#2b1b12;
-  color:#f5deb3;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  min-height:100vh;
-  padding:10px;
-}
-h1{text-align:center;font-size:24px;}
-button{
-  padding:5px 10px;
-  margin:2px;
-  font-family:'Courier New',monospace;
-  font-size:14px;
-  background:linear-gradient(#b57b3d,#7a4a2e);
-  color:#fff2cc;
-  border:3px solid #e0b97d;
-  border-radius:4px;
-  cursor:pointer;
-}
-button:hover{background:linear-gradient(#c88a45,#8a5535);}
-#adminPanel {
-  display: none;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #3b2415;
-  border: 3px solid #c9a26b;
-  padding: 10px;
-  border-radius: 6px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.7);
-  width: 90%;          /* <- élargit à presque tout l’écran */
-  max-width: 1200px;   /* <- limite pour grands écrans */
-  max-height: 90vh;
-  overflow: auto;
+body { 
+    font-family: 'Courier New', monospace; 
+    color: #3b2f2f; /* texte marron foncé sur fond clair */
+    background-color: #d2b48c; /* marron clair style parchemin */
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: 100vh; 
+    margin: 0; 
 }
 
-.admin-char-line {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 6px;
-  margin-bottom: 4px;
-  background: #4a2d1a;
-  border-radius: 4px;
-  flex-wrap: nowrap;       /* <- empêche le retour à la ligne */
+    .login-container, .village-container { background-color: rgba(0,0,0,0.75); padding: 30px; border: 3px solid #d4af37; border-radius: 15px; text-align: center; min-width: 320px; }
+   h1, h2, h3 {
+    color: #d4af37; /* doré */
+    text-shadow: 1px 1px #3b2f2f; /* ombre marron foncé */
 }
 
-.admin-char-info {
-  font-size: 14px;
-  flex: 1;
-  white-space: nowrap;     /* <- tout sur une seule ligne */
-  overflow: hidden;
-  text-overflow: ellipsis; /* <- "..." si texte trop long */
+    button { font-family: 'Courier New', monospace; background-color: #444; color: #f5f5dc; border: 2px solid #d4af37; padding: 10px 20px; margin: 5px; cursor: pointer; font-size: 1em; border-radius: 5px; width: 90%; }
+    button:hover { background-color: #555; }
+    .popup { display: none; position: fixed; top:50%; left:50%; transform: translate(-50%,-50%); background-color: rgba(0,0,0,0.95); padding:30px; border:2px solid #d4af37; border-radius:10px; z-index:1000; min-width:320px; }
+    .popup input, .popup select { display:block; margin:10px auto; padding:8px; border-radius:5px; border:1px solid #d4af37; width:85%; background-color:#222; color:#f5f5dc; }
+    .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); z-index:500; }
+   /* === Village layout esthétique retro fantasy === */
+.village-container { display: flex; flex-direction: column; align-items: center; gap: 20px; margin-top: 20px; }
+.village-header { text-align: center; }
+#villageImageDragon,
+#villageImageSerpent {
+    max-width: 400px;  /* comme avant */
+    width: 80%;        /* comme avant */
+    border: 3px solid #d4af37;
+    border-radius: 10px;
+    margin-bottom: 10px;
 }
 
-.admin-char-actions {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  flex-shrink: 0;         /* <- empêche les boutons de rétrécir */
+.village-header h1 { color: #d4af37; font-size: 2.5em; text-shadow: 2px 2px #000; margin-bottom: 20px; }
+
+.village-main { display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 30px; width: 100%; max-width: 900px; }
+.player-panel { background-color: rgba(0,0,0,0.75); border: 2px solid #d4af37; border-radius: 10px; padding: 20px; flex: 2; color: #f5f5dc; }
+.player-panel h2, .player-panel h3 { margin: 10px 0; }
+.player-panel ul { list-style: none; padding: 0; text-align: left; font-size: 1.1em; }
+.player-panel li { margin: 5px 0; }
+
+.actions-panel { display: flex; flex-direction: column; gap: 10px; flex: 1; align-items: flex-end; }
+.actions-panel button { width: 120px; background-color: rgba(68,68,68,0.9); border: 2px solid #d4af37; font-size: 0.95em; }
+.actions-panel button:hover { background-color: rgba(85,85,85,0.95); }
+
+/* Responsive */
+@media screen and (max-width: 768px){
+    .village-main { flex-direction: column; align-items: center; }
+    .actions-panel { align-items: center; }
+}
+.login-footer {
+    margin-top: 20px;
+    text-align: center;
+    color: #f5f5dc;
+    font-size: 0.9em;
+    border-top: 2px solid #d4af37;
+    padding-top: 5px;
+}
+button {
+  box-shadow: 2px 2px 0 #000;
+}
+button:active {
+  box-shadow: none;
+  transform: translate(2px,2px);
+}
+h1, h2, h3 {
+  font-family: 'IM Fell English SC', serif;
+}
+.stat-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 5px 0;
+    gap: 5px;
+}
+.stat-row button {
+    width: 30px;
+    padding: 2px 5px;
+    font-size: 1em;
+    cursor: pointer;
+}
+.stat-row span {
+    width: 30px;
+    text-align: center;
+    display: inline-block;
+}
+/* === FICHE PERSONNAGE CLAIRE ET LISIBLE === */
+#characterSheetPopup {
+    background-color: #f5f5dc; /* fond beige clair */
+    color: #3b2f2f; /* texte marron foncé */
+    border: 3px solid #d4af37; /* bordure dorée */
+    border-radius: 15px;
+    padding: 25px 30px;
+    min-width: 350px;
+    max-width: 450px;
+    text-align: center;
+    font-size: 1em;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
 }
 
-input[type="number"] {
-  width: 80px;             /* plus large pour mieux voir */
-  padding: 2px 4px;
-  border-radius: 3px;
-  border: 1px solid #c9a26b;
-  background: #2b1b12;
-  color: #f5deb3;
+#characterSheetPopup h2 {
+    color: #d4af37;
+    text-shadow: 1px 1px #3b2f2f;
+    font-size: 1.8em;
+    margin-bottom: 15px;
 }
 
-/* Panels */
-#creator,#charSheet,#adminPanel,#storyPanel,#arenaPanel{
-  display:none;
-  position:fixed;
-  top:50%; left:50%;
-  transform:translate(-50%,-50%);
-  background:#3b2415;
-  border:3px solid #c9a26b;
-  padding:10px;
-  border-radius:6px;
-  box-shadow:0 0 10px rgba(0,0,0,0.7);
-  max-width:90%;
-  max-height:90vh;
-  overflow:auto;
+#characterSheetPopup .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(255,255,255,0.8);
+    padding: 6px 10px;
+    margin: 6px 0;
+    border-radius: 8px;
+    font-weight: bold;
+    color: #3b2f2f;
 }
 
-/* Barre XP */
-.xp-bar-container {
-  width: 100%;
-  height: 15px;
-  background: #555;
-  border: 1px solid #c9a26b;
-  border-radius: 8px;
-  margin: 5px 0 10px 0;
-  overflow: hidden;
-}
-.xp-bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(to right, #00f, #00aaff);
-  transition: width 0.5s ease;
+#characterSheetPopup .stat-row button {
+    width: 35px;
+    height: 30px;
+    font-size: 1em;
+    font-weight: bold;
+    background-color: #d4af37;
+    color: #3b2f2f;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
 }
 
-/* Fiche joueur */
-
-.char-card h2 {
-  text-align: center;
-  font-size: 1.6em;
-  margin-bottom: 12px;
-  color: #ffcc66;
-  letter-spacing: 1px;
+#characterSheetPopup .stat-row button:hover {
+    background-color: #e6c35c;
 }
 
-.char-header {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:15px;
-}
-.char-header h2 {margin:0;font-size:22px;color:#ffd700;}
-.char-class {font-size:16px;font-style:italic;background:#7a4a2e;padding:3px 8px;border-radius:6px;}
-.char-info p {margin:5px 0;line-height:1.3;}
-.stats-container {display:flex;flex-direction:column;gap:10px;margin-top:10px;}
-.stat-line {display:flex;align-items:center;gap:10px;}
-.stat-btn {font-size:14px;padding:3px 8px;background:linear-gradient(#b57b3d,#7a4a2e);color:#fff2cc;border:2px solid #e0b97d;border-radius:5px;cursor:pointer;}
-.stat-btn:hover {background:linear-gradient(#c88a45,#8a5535);}
-.close-btn {margin-top:15px;padding:8px 15px;background:#b57b3d;color:#fff2cc;border:none;border-radius:6px;cursor:pointer;}
-.close-btn:hover {background:#c88a45;}
-
-/* Admin */
-.admin-char-line{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:4px 6px;
-  margin-bottom:4px;
-  background:#4a2d1a;
-  border-radius:4px;
-}
-.admin-char-info{font-size:14px;flex:1;}
-.admin-char-actions{display:flex;gap:4px;align-items:center;}
-input[type="number"]{width:60px;padding:2px 4px;border-radius:3px;border:1px solid #c9a26b;background:#2b1b12;color:#f5deb3;}
-textarea{width:95%;height:50px;background:#2b1b12;color:#f5deb3;border:1px solid #c9a26b;border-radius:4px;}
-
-/* Boss */
-.boss-container{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  background:#4a2d1a;
-  padding:4px 6px;
-  border-radius:4px;
-  margin:4px 0;
-}
-.boss-info{flex:1;display:flex;align-items:center;gap:10px;}
-.boss-hp-bar{width:100px;height:12px;background:#555;border:1px solid #c9a26b;border-radius:3px;}
-.boss-hp-fill{height:100%;background:#0f0;border-radius:2px;width:100%;}
-#bossProgress{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
-.bossProgressItem{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:4px;color:#000;font-size:12px;font-weight:bold;}
-.bossVaincu{background:#0f0;}
-.bossDisponible{background:#ff0;}
-.bossBloque{background:#888;}
-
-
-/* Responsive mobile */
-@media (max-width:600px){
-  body{padding:5px;font-size:14px;}
-  h1{font-size:20px;}
-  button{font-size:12px;padding:6px 8px;}
-  #creator,#charSheet,#adminPanel,#storyPanel,#arenaPanel{width:95%;max-height:90vh;padding:10px;}
-  .char-card{padding:15px;width:100%;}
-  .char-header{flex-direction:column;align-items:flex-start;gap:5px;}
-  .stats-container .stat-line{flex-direction:row;align-items:center;gap:5px;}
-  .boss-container{flex-direction:column;align-items:flex-start;gap:5px;}
-  .boss-info{flex-direction:column;align-items:flex-start;}
-  #bossProgress{gap:2px;flex-wrap:wrap;}
-  #bossProgress .bossProgressItem{width:25px;height:25px;font-size:10px;}
-  textarea{width:100%;height:40px;}
-  input[type="text"], select, input[type="number"]{width:100%;box-sizing:border-box;}
-}
-.floating-back-btn {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  padding: 10px 15px;
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  background: linear-gradient(#b57b3d,#7a4a2e);
-  color: #fff2cc;
-  border: 3px solid #e0b97d;
-  border-radius: 6px;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-  z-index: 1000;
-  transition: transform 0.2s;
-}
-.floating-back-btn:hover {
-  background: linear-gradient(#c88a45,#8a5535);
-  transform: scale(1.05);
-}
-#dragonFooter {
-  position: fixed;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 11px;
-  color: #c9a26b;
-  opacity: 0.7;
-  font-family: 'Courier New', monospace;
-  pointer-events: none;
-}
-/* MODAL */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5);
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  text-align: center;
-}
-.popote-panel {
-  background: #2b1b12;
-  color: #fff2cc;
-  border: 2px solid #c9a26b;
-  border-radius: 8px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.7);
-  font-family: "Georgia", serif;
+#characterSheetPopup span {
+    min-width: 35px;
+    display: inline-block;
+    text-align: center;
 }
 
+#characterSheetPopup #pcText {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 12px;
+}
+#characterSheetPopup #pcText {
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-bottom: 12px;
+    background-color: rgba(150, 126, 46, 0.2); /* léger fond doré derrière le texte */
+    padding: 4px 8px;
+    border-radius: 5px;
+}
+/* === Tableau Admin Fantasy === */
+/* Inputs et selects dans le tableau admin */
+#adminPlayersList select {
+    width: 100%;             /* prend toute la largeur de la cellule */
+    padding: 4px 6px;
+    border-radius: 5px;
+    border: 1px solid #d4af37;
+    background-color: #222;
+    color: #f5f5dc;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+#adminPlayersList td {
+    min-width: 150px;       /* largeur minimale pour que le contenu tienne */
+}
+
+#adminPlayersList td button {
+    width: 100%;             /* bouton prend toute la cellule */
+    box-sizing: border-box;
+}
+/* Admin Table responsive */
+#adminPlayersList {
+    overflow-x: auto; /* scroll horizontal si nécessaire */
+    margin-top: 10px;
+}
+
+#adminPlayersList table {
+    border-collapse: collapse;
+    width: auto;
+    margin: 0 auto;
+}
+
+#adminPlayersList th, #adminPlayersList td {
+    border: 1px solid #3b2f2f;
+    padding: 5px;
+    min-width: 80px;
+    text-align: center;
+}
+
+/* Mobile friendly */
+@media screen and (max-width: 400px){
+    .village-main { flex-direction: column; align-items: center; gap: 15px; }
+    .actions-panel { align-items: center; width: 100%; }
+    .actions-panel button { width: 90%; }
+    #characterSheetPopup { min-width: 90%; max-width: 95%; padding: 15px; }
+    #adminPlayersList table { width: 100%; }
+    #adminPlayersList th, #adminPlayersList td { min-width: auto; padding: 3px; font-size: 0.85em; }
+}
+/* ===== IMAGE PAGE DE CONNEXION ===== */
+.login-logo {
+    display: block;
+    margin: 0 auto 15px auto; /* centré + espace en dessous */
+    max-width: 180px;        /* taille desktop */
+    width: 80%;              /* responsive mobile */
+    height: auto;
+}
+
+/* Mobile */
+@media screen and (max-width: 400px){
+    .login-logo {
+        max-width: 140px;
+        margin-bottom: 10px;
+    }
+}
 
 
 
 </style>
 </head>
 <body>
-<!-- Bouton Créer un compte -->
-<button id="createAccountBtn" class="main-popote-btn" onclick="openCreateAccount()">Créer un compte</button>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&display=swap" rel="stylesheet">
 
-
-
-<!-- MODALE CREER COMPTE -->
-<div class="modal" id="createAccountModal">
-  <div class="modal-content" style="max-width: 400px; margin: auto;">
-    <h3>Créer un compte Popote & Dragon</h3>
-    <input type="email" id="createEmail" placeholder="Adresse mail" style="width: 100%; margin-bottom: 10px;"><br>
-    <div style="position: relative; margin-bottom: 10px;">
-      <input type="password" id="createPassword" placeholder="Mot de passe" style="width: 100%;">
-      <button type="button" onclick="togglePassword('createPassword')" 
-              style="position: absolute; right: 5px; top: 5px; padding: 5px;">👁️</button>
-    </div>
-    <button onclick="createAccount()">Valider</button>
-    <button onclick="closeCreateAccount()">Annuler</button>
-  </div>
-</div>
-<!-- Bouton Connexion / Déconnexion -->
-<button id="authBtn">🔑 Connexion</button>
-
-
-<!-- MODALE CONNEXION -->
-<div class="modal" id="loginModal">
-  <div class="modal-content" style="max-width: 400px; margin: auto;">
-    <h3>Connexion Popote & Dragon</h3>
-    <input type="email" id="loginEmail" placeholder="Adresse mail" style="width: 100%; margin-bottom: 10px;"><br>
-    <div style="position: relative; margin-bottom: 10px;">
-      <input type="password" id="loginPassword" placeholder="Mot de passe" style="width: 100%;">
-      <button type="button" onclick="togglePassword('loginPassword')" 
-              style="position: absolute; right: 5px; top: 5px; padding: 5px;">👁️</button>
-    </div>
-    <button onclick="login()">Valider</button>
-    <button onclick="closeLogin()">Annuler</button>
-  </div>
-</div>
-
-<button id="backToPopote" class="floating-back-btn">🏠 Popote & Compagnie</button>
-<div id="dragonFooter">Imaginé et créé par PM avec l'aide de Chat GPT - MAJ 29</div>
-
-
-<h1>🍗 Popote & Dragon 🐉</h1>
-<button id="createBtn">Créer son personnage</button>
-<button id="playerBtn" style="display:none;"></button>
-<button id="adminBtn">Maître du Jeu</button>
-<button id="storyBtn">Histoire</button>
-<button id="arenaBtn">⚔️ Arène</button>
-
-<!-- MODALE ARENE simplifiée -->
-<div class="modal" id="arenaModal">
-  <div class="modal-content" style="
-      max-width: 90%;
-      max-height: 90vh;
-      background: #3b2415;
-      border: 3px solid #c9a26b;
-      padding: 10px;
-      border-radius: 6px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.7);
-      overflow: auto;
-  ">
-<img src="Arène 1.png" alt="Arène" style="
-    display: block;
-    margin: 10px auto;
-    width: 100%;
-    max-width: 400px;
-    height: auto;
-    border: 2px solid #c9a26b;
-    border-radius: 6px;
-">
-
-    <h3>Arène</h3>
-    <button onclick="closeModal('arenaModal')">🔙 Retour</button>
-<p id="arenaStats">Victoires : 0 | Défaites : 0</p>
-
-    <p id="arenaCounter">Combats restants : 0/5</p>
-    <button id="fightBtn">⚔️ Combat</button>
-
-    <h4>Historique des combats</h4>
-    <div id="arenaHistory" style="max-height:300px;overflow-y:auto;background:#2b1b12;color:#fff2cc;padding:5px;border:1px solid #c9a26b;border-radius:4px;font-family:'Courier New',monospace;font-size:14px;"></div>
-  </div>
-</div>
-
-<script>
-// Nettoie complètement l'historique de l'arène
-// Nettoie complètement l'historique de l'arène
-async function cleanArenaHistory() {
-  let arenaHistory = JSON.parse(localStorage.getItem("arenaHistory") || "[]");
-
-  // Récupérer tous les personnages existants dans Firestore
-  const snapshot = await db.collection("popoteDragonCharacters").get();
-  const existingNames = snapshot.docs.map(doc => doc.data().name);
-
-  // Ne garder que les entrées où le joueur ET l'adversaire existent encore
-  const cleanedHistory = arenaHistory.filter(f => 
-    existingNames.includes(f.player) && existingNames.includes(f.opponent)
-  );
-
-  // Sauvegarder dans localStorage
-  localStorage.setItem("arenaHistory", JSON.stringify(cleanedHistory));
-
-  // Mettre à jour la variable globale
-  arenaHistory = cleanedHistory;
-
-  // Recharger affichage si l'arène est ouverte
-  if(document.getElementById("arenaHistory")){
-    loadArenaHistory();
-    updateArenaStats();
-  }
-
-  return cleanedHistory;
-}
-
-
-window.onload = async () => {
-  await cleanArenaHistory(); // <-- nettoie tout l'historique dès le démarrage
-  renderBossProgress();
-  renderBossList();
-  initBossesIfEmpty();
-};
-
-
-
-
-// Modification du bouton Arène
-document.getElementById("arenaBtn").onclick = async () => {
-  if(!myCharacter){ 
-    alert("Crée ton personnage d'abord !"); 
-    return; 
-  }
-
-  document.getElementById("arenaModal").style.display = "flex";
-
-  // Nettoyer l'historique avant affichage
-  arenaHistory = await cleanArenaHistory();
-  
-  arenaFightsToday = getTodayFights();
-  updateArenaCounter();
-  loadArenaHistory();
-  updateArenaStats();
-};
-
-
-    function closeModal(id){
-  const modal = document.getElementById(id);
-  if(modal) modal.style.display = "none";
-}
-// Variables
-let arenaHistory = JSON.parse(localStorage.getItem("arenaHistory") || "[]");
-let arenaFightsToday = 0;
-const MAX_FIGHTS_PER_DAY = 5;
-
-
-
-
-// Mettre à jour les stats victoires/défaites
-function updateArenaStats(){
-  const today = new Date().toLocaleDateString();
-  let wins = 0;
-  let losses = 0;
-
-  // compter toutes les victoires et défaites
-  arenaHistory.forEach(f => {
-    if(f.victory) wins++;
-    else losses++;
-  });
-
-  const statsEl = document.getElementById("arenaStats");
-  if(statsEl){
-    statsEl.textContent = `Victoires : ${wins} | Défaites : ${losses}`;
-  }
-}
-
-// Modifier saveArenaHistory pour mettre à jour les stats après chaque combat
-function saveArenaHistory(opponentName, duelResult) {
-  const today = new Date().toLocaleDateString();
-  arenaHistory.unshift({ 
-    date: today, 
-    opponent: opponentName, 
-    player: myCharacter ? myCharacter.name : "Inconnu", // <-- ajout du joueur
-    log: duelResult.log, 
-    victory: duelResult.victory 
-  });
-  if(arenaHistory.length > 50) arenaHistory.pop();
-  localStorage.setItem("arenaHistory", JSON.stringify(arenaHistory));
-  loadArenaHistory();
-  updateArenaStats();
-}
-
-
-// Appeler updateArenaStats quand on ouvre l’Arène
-document.getElementById("arenaBtn").onclick = () => {
-  if(!myCharacter){ alert("Crée ton personnage d'abord !"); return; }
-  document.getElementById("arenaModal").style.display = "flex";
-  arenaFightsToday = getTodayFights();
-  updateArenaCounter();
-  loadArenaHistory();
-  updateArenaStats(); // <-- nouveau
-};
-
-
-
-// Compteur combats
-function getTodayFights(){
-  const today = new Date().toLocaleDateString();
-  return arenaHistory.filter(f => f.date === today).length;
-}
-function updateArenaCounter(){
-  document.getElementById("arenaCounter").textContent = 
-    `Combats restants : ${MAX_FIGHTS_PER_DAY - arenaFightsToday}/${MAX_FIGHTS_PER_DAY}`;
-}
-
-// Génération adversaire automatique
-function generateOpponent(){
-  const adversaireNumber = arenaFightsToday + 1;
-  return {
-    name: `Adversaire ${adversaireNumber}`,
-    stats:{
-      force: 5 + Math.floor(Math.random()*5),
-      defense: 2 + Math.floor(Math.random()*3),
-      agilite: 1 + Math.floor(Math.random()*3),
-      pv: 15 + Math.floor(Math.random()*10)
-    }
-  };
-}
-
-// Duel automatique (texte uniquement)
-function duel(player, opponent){
-  let hpP = player.stats.pv;
-  let hpO = opponent.stats.pv;
-  let log = `Combat ${player.name} vs ${opponent.name}\n\n`;
-
-  const maxTurns = 50; // sécurité pour éviter boucle infinie
-  let turn = 0;
-
-  while(hpP > 0 && hpO > 0 && turn < maxTurns){
-    turn++;
-
-    // Player attaque
-    let dmgP = Math.max(1, player.stats.force - opponent.stats.defense); // au moins 1 dégâts
-    if(Math.random()*100 < opponent.stats.agilite*5) dmgP = 1; // jamais 0
-    hpO -= dmgP;
-    hpO = Math.max(0,hpO);
-    log += `${player.name} inflige ${dmgP} à ${opponent.name} (${hpO} PV restant)\n`;
-    if(hpO <= 0) break;
-
-    // Opponent attaque
-    let dmgO = Math.max(1, opponent.stats.force - player.stats.defense); // au moins 1 dégâts
-    if(Math.random()*100 < player.stats.agilite*5) dmgO = 1;
-    hpP -= dmgO;
-    hpP = Math.max(0,hpP);
-    log += `${opponent.name} inflige ${dmgO} à ${player.name} (${hpP} PV restant)\n`;
-  }
-
-  // sécurité si maxTurns atteint
-  if(turn >= maxTurns){
-    log += "\n⚠️ Combat arrêté : trop long, match nul !";
-    return { log, victory: false };
-  }
-
-  const victory = hpP > 0;
-  log += victory ? `\n🏆 ${player.name} gagne !` : `\n💀 ${opponent.name} gagne !`;
-  return { log, victory };
-}
-
-
-// Bouton Combat
-document.getElementById("fightBtn").onclick = async () => {
-  if(!myCharacter){
-    alert("Crée ton personnage d'abord !");
-    return;
-  }
-
-  const today = new Date().toDateString();
-
-  // Initialisation des combats journaliers
-  if(!myCharacter.arena) myCharacter.arena = {date: today, count: 0};
-  if(myCharacter.arena.date !== today) myCharacter.arena = {date: today, count: 0};
-
-  if(myCharacter.arena.count >= MAX_FIGHTS_PER_DAY){
-    alert(`Tu as déjà fait ${MAX_FIGHTS_PER_DAY} combats aujourd'hui !`);
-    return;
-  }
-
-  // Génération adversaire automatique
-  const opponent = {
-    name: `Adversaire ${myCharacter.arena.count + 1}`,
-    stats: {
-      force: 5 + Math.floor(Math.random()*5),
-      defense: 2 + Math.floor(Math.random()*3),
-      agilite: 1 + Math.floor(Math.random()*3),
-      pv: 15 + Math.floor(Math.random()*10)
-    }
-  };
-
-  // Duel texte uniquement (plus de jauges)
-  const result = duel(myCharacter, opponent);
-
-  // Mise à jour du compteur
-  myCharacter.arena.count++;
-  arenaFightsToday = myCharacter.arena.count;
-  updateArenaCounter();
-
-  // Sauvegarde du personnage et historique
-  saveMyCharacter();
-  saveArenaHistory(opponent.name, result);
-};
-
-
-// Historique
-function loadArenaHistory(){
-  const container = document.getElementById("arenaHistory");
-  container.innerHTML = "";
-  arenaHistory.forEach(f => {
-    const div = document.createElement("div");
-    div.style.marginBottom="10px";
-    div.innerHTML = `<strong>${f.date}</strong> vs ${f.opponent}<br><pre>${f.log}</pre>`;
-    container.appendChild(div);
-  });
-}
-
-
-</script>
-
-
-
-
-<!-- CREATION -->
-<div id="creator">
-<h2>Créer ton personnage</h2>
-<input type="text" id="name" placeholder="Nom"><br><br>
-<select id="class">
-<option>Guerrier</option>
-<option>Mage</option>
-<option>Voleur</option>
-<option>Popotier</option>
-</select><br><br>
-<textarea id="desc" placeholder="Description"></textarea>
-<h3>Points initiaux (10)</h3>
-<p>Points restants : <span id="pointsLeft">10</span></p>
-<div class="stat-line">Force : <button onclick="changeStat('force',-1)">-</button> <span id="force">0</span> <button onclick="changeStat('force',1)">+</button></div>
-<div class="stat-line">PV : <button onclick="changeStat('pv',-1)">-</button> <span id="pv">0</span> <button onclick="changeStat('pv',1)">+</button></div>
-<div class="stat-line">Défense : <button onclick="changeStat('defense',-1)">-</button> <span id="defense">0</span> <button onclick="changeStat('defense',1)">+</button></div>
-<div class="stat-line">Agilité : <button onclick="changeStat('agilite',-1)">-</button> <span id="agilite">0</span> <button onclick="changeStat('agilite',1)">+</button></div>
-<button onclick="validateCharacter()">Valider</button>
-</div>
-
-<!-- FICHE JOUEUR -->
-<div id="charSheet">
-  <div class="char-card">
-    <div class="char-header">
-      <h2 id="sheetName"></h2>
-      <span class="char-class" id="sheetClass"></span>
-    </div>
-    <div class="char-info">
-      <p><strong>Niveau :</strong> <span id="sheetLevel"></span></p>
-      <p><strong>XP :</strong> <span id="sheetXP"></span></p>
-      <div class="xp-bar-container">
-        <div class="xp-bar" id="sheetXPBar"></div>
-      </div>
-      <p><strong>Description :</strong></p>
-      <p id="sheetDesc"></p>
-
-      <!-- NOUVEAU : Dates -->
-      <p><strong>Créé le :</strong> <span id="sheetCreatedAt">inconnue</span></p>
-      <p><strong>Dernière connexion :</strong> <span id="sheetLastLogin">jamais</span></p>
-    </div>
-
-    <h3>Stats</h3>
-    <div class="stats-container">
-      <div class="stat-line">Force : <span id="sheetForce"></span>
-        <button class="stat-btn" onclick="changeSheetStat('force',1)">+</button>
-        <button class="stat-btn" onclick="changeSheetStat('force',-1)">-</button>
-      </div>
-      <div class="stat-line">PV : <span id="sheetPV"></span>
-        <button class="stat-btn" onclick="changeSheetStat('pv',1)">+</button>
-        <button class="stat-btn" onclick="changeSheetStat('pv',-1)">-</button>
-      </div>
-      <div class="stat-line">Défense : <span id="sheetDefense"></span>
-        <button class="stat-btn" onclick="changeSheetStat('defense',1)">+</button>
-        <button class="stat-btn" onclick="changeSheetStat('defense',-1)">-</button>
-      </div>
-      <div class="stat-line">Agilité : <span id="sheetAgilite"></span>
-        <button class="stat-btn" onclick="changeSheetStat('agilite',1)">+</button>
-        <button class="stat-btn" onclick="changeSheetStat('agilite',-1)">-</button>
-      </div>
-    </div>
-
-    <p style="font-weight:bold; color:#ffd700;">Points disponibles : <span id="freePoints"></span></p>
-    <button onclick="closeSheet()" class="close-btn">Fermer</button>
-  </div>
-</div>
-
-
-<!-- ADMIN -->
-<div id="adminPanel">
-<h3>Maître du Jeu</h3>
-<div id="adminCharList"></div>
-<button id="cleanArenaBtn" style="margin-top:10px; background:#c62828; color:#fff; padding:5px 10px; border:none; border-radius:4px; cursor:pointer;">
-  🧹 Nettoyer arène
-</button>
-
-<button onclick="closeAdmin()">Fermer</button>
-</div>
-
-<!-- STORY / BOSS -->
-<div id="storyPanel">
-<h3>Progression Histoire</h3>
-<div id="bossProgress"></div>
-<div id="bossList"></div>
-<button onclick="closeStory()">Fermer</button>
-</div>
-
-
-
-
-<!-- FIREBASE -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<div class="login-container" id="loginPage">
+
+    <!-- IMAGE EN HAUT -->
+    <img src="Popote Dragon.png"
+         alt="Popote & Dragons"
+         class="login-logo">
+
+    <!-- TITRE -->
+    <h1>Popote & Dragons</h1>
+
+    <!-- BOUTONS -->
+    <button id="createBtn">Créer un compte</button>
+    <button id="loginBtn">Connexion</button>
+
+    <!-- FOOTER -->
+    <div class="login-footer">
+        2026 - Imaginé et créé par PM avec l'aide de Chat GPT - MAJ 06
+    </div>
+
+</div>
+
+
+
+
+<!-- ===== VILLAGE DRAGON POURPRE ===== -->
+<div class="village-container" id="villageDragon" style="display:none;">
+    <div class="village-header">
+        <img src="village1.png" alt="Village Dragon Pourpre" id="villageImageDragon">
+        <h1>Ordre du Dragon Pourpre ⚔️</h1>
+    </div>
+
+    <div class="village-main">
+        <div class="player-panel">
+            <h2 id="welcomeTextDragon">Bienvenue, aventurier.</h2>
+            <p id="teamTextDragon"></p>
+            <p id="levelTextDragon"></p>
+            <p id="xpTextDragon"></p>
+        </div>
+
+        <div class="actions-panel">
+            <button class="openCharacterSheetBtn">📝 Fiche</button>
+            <button class="exploreBtn">🌳 Explorer</button>
+            <button class="inventoryBtn">🎒 Inventaire</button>
+            <button class="logoutBtn">🚪 Déconnexion</button>
+            <button class="adminBtn" style="display:none;">⚔️ Admin</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== VILLAGE SERPENT NOIR ===== -->
+<div class="village-container" id="villageSerpent" style="display:none;">
+    <div class="village-header">
+        <img src="village1.png" alt="Village Serpent Noir" id="villageImageSerpent">
+        <h1>Confrérie du Serpent Noir 🐍</h1>
+    </div>
+
+    <div class="village-main">
+        <div class="player-panel">
+            <h2 id="welcomeTextSerpent">Bienvenue, aventurier.</h2>
+            <p id="teamTextSerpent"></p>
+            <p id="levelTextSerpent"></p>
+            <p id="xpTextSerpent"></p>
+        </div>
+
+        <div class="actions-panel">
+            <button class="openCharacterSheetBtn">📝 Fiche</button>
+            <button class="exploreBtn">🌳 Explorer</button>
+            <button class="inventoryBtn">🎒 Inventaire</button>
+            <button class="logoutBtn">🚪 Déconnexion</button>
+            <button class="adminBtn" style="display:none;">⚔️ Admin</button>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- POPUPS -->
+<div class="popup" id="adminPopup">
+    <h2>⚔️ Panel Admin ⚔️</h2>
+    <div id="adminPlayersList" style="margin-top:10px;"></div>
+    <p>Bienvenue, Maître du Donjon.</p>
+    <button id="adminClose">Fermer</button>
+</div>
+
+<div class="popup" id="createPopup">
+    <h2>Créer un compte</h2>
+    <input type="email" id="createEmail" placeholder="Adresse email">
+    <input type="password" id="createPassword" placeholder="Mot de passe">
+    <button id="createSubmit">Valider</button>
+    <button id="createBack">Retour</button>
+</div>
+
+<div class="popup" id="loginPopup">
+    <h2>Connexion</h2>
+    <input type="email" id="loginEmail" placeholder="Adresse email">
+    <input type="password" id="loginPassword" placeholder="Mot de passe">
+    <button id="loginSubmit">Se connecter</button>
+    <button id="loginBack">Retour</button>
+</div>
+
+<div class="popup" id="characterPopup">
+    <h2>Viens prendre part à cette aventure</h2>
+    <input type="text" id="characterName" placeholder="Nom du personnage">
+    <select id="characterClass">
+        <option value="">-- Classe --</option>
+        <option>Guerrier</option>
+        <option>Voleur</option>
+        <option>Mage</option>
+        <option>Nécromancien</option>
+        <option>Archer</option>
+        
+    </select>
+    <p>Points de compétence restants : <span id="pointsRestants">10</span></p>
+    <label>Attaque</label><input type="number" id="statAttaque" min="0" value="0">
+    <label>Défense</label><input type="number" id="statDefense" min="0" value="0">
+    <label>Esquive</label><input type="number" id="statEsquive" min="0" value="0">
+    <label>Points de vie</label><input type="number" id="statVie" min="0" value="0">
+    <button id="characterSubmit">Entrer dans le monde</button>
+</div>
+
+<div class="popup" id="characterSheetPopup">
+    <h2>🛡️ Fiche Personnage 🗡️</h2>
+
+    <!-- INFOS GÉNÉRALES -->
+    <p id="sheetClass"></p>
+    <p id="sheetTeam"></p>
+    <p id="sheetLevel"></p>
+
+    <p id="pcText" data-pc="0">Points de Compétence restants : 0</p>
+
+    <!-- STATS + / - -->
+    <div class="stat-row">
+        <span>Attaque: </span>
+        <button class="dec" data-stat="attaque">-</button>
+        <span id="sheetAttaque">0</span>
+        <button class="inc" data-stat="attaque">+</button>
+    </div>
+    <div class="stat-row">
+        <span>Défense: </span>
+        <button class="dec" data-stat="defense">-</button>
+        <span id="sheetDefense">0</span>
+        <button class="inc" data-stat="defense">+</button>
+    </div>
+    <div class="stat-row">
+        <span>Esquive: </span>
+        <button class="dec" data-stat="esquive">-</button>
+        <span id="sheetEsquive">0</span>
+        <button class="inc" data-stat="esquive">+</button>
+    </div>
+    <div class="stat-row">
+        <span>Vie: </span>
+        <button class="dec" data-stat="vie">-</button>
+        <span id="sheetVie">0</span>
+        <button class="inc" data-stat="vie">+</button>
+    </div>
+
+    <button id="saveStatsBtn">Valider</button>
+    <button id="cancelStatsBtn">Annuler</button>
+</div>
+
+
+
+<div class="overlay" id="overlay"></div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyD_zyfnkZKehak9uALFWVwOjAJKB7RyKSY",
-  authDomain: "popote-dragon.firebaseapp.com",
-  projectId: "popote-dragon",
-  storageBucket: "popote-dragon.firebasestorage.app",
-  messagingSenderId: "1036089259620",
-  appId: "1:1036089259620:web:174d4be84f594141141171"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth(); //
+document.addEventListener('DOMContentLoaded', () => {
 
+  // ===== CONFIG FIREBASE =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyDxSVEnK9stHRQxF-WEUAaVQ5OjM1jqmXU",
+    authDomain: "popoteetdragonv2.firebaseapp.com",
+    projectId: "popoteetdragonv2",
+    storageBucket: "popoteetdragonv2.firebasestorage.app",
+    messagingSenderId: "1012170229310",
+    appId: "1:1012170229310:web:4914b80585158c0c42736f"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-const createAccountBtn = document.getElementById("createAccountBtn");
-const loginBtn = document.getElementById("loginBtn");
-if (loginBtn) {
-  loginBtn.addEventListener("click", () => {
-    const user = firebase.auth().currentUser;
-    if (user) {
-      firebase.auth().signOut();
-    } else {
-      openLogin();
-    }
+  // ===== VARIABLES =====
+  let currentUser = null;
+  let teamToggle = 0;
+  const creationPointsRestants = 10;
+  const adminEmail = "pierre.valentin8@gmail.com";
+
+  // DOM Elements
+  const overlay = document.getElementById('overlay');
+  const loginPage = document.getElementById('loginPage');
+  const villageDragon = document.getElementById('villageDragon');
+  const villageSerpent = document.getElementById('villageSerpent');
+  const createPopup = document.getElementById('createPopup');
+  const loginPopup = document.getElementById('loginPopup');
+  const characterPopup = document.getElementById('characterPopup');
+  const characterSheetPopup = document.getElementById('characterSheetPopup');
+
+  const statAttaque = document.getElementById('statAttaque');
+  const statDefense = document.getElementById('statDefense');
+  const statEsquive = document.getElementById('statEsquive');
+  const statVie = document.getElementById('statVie');
+  const pointsRestantsSpan = document.getElementById('pointsRestants');
+
+  const pcText = document.getElementById('pcText');
+  const sheetAttaque = document.getElementById('sheetAttaque');
+  const sheetDefense = document.getElementById('sheetDefense');
+  const sheetEsquive = document.getElementById('sheetEsquive');
+  const sheetVie = document.getElementById('sheetVie');
+  const saveStatsBtn = document.getElementById('saveStatsBtn');
+  const cancelStatsBtn = document.getElementById('cancelStatsBtn');
+
+  const adminPopup = document.getElementById('adminPopup');
+  const adminPlayersList = document.getElementById('adminPlayersList');
+
+  // ========================
+  // FIREBASE AUTH STATE
+  // ========================
+  auth.onAuthStateChanged(async (user) => {
+      if (user) {
+          currentUser = user.uid;
+          const doc = await db.collection('players').doc(currentUser).get();
+          const data = doc.exists ? doc.data() : {character:null, level:1, xp:0};
+
+          if(data.character){
+              loginPage.style.display = 'none';
+              showVillage(data);
+          } else {
+              overlay.style.display='block';
+              characterPopup.style.display='block';
+          }
+      } else {
+          currentUser = null;
+          villageDragon.style.display = 'none';
+          villageSerpent.style.display = 'none';
+          loginPage.style.display = 'block';
+      }
   });
-}
 
-// Nettoyer tout l'historique de l'arène
-document.getElementById("cleanArenaBtn").onclick = () => {
-  if(confirm("Supprimer tout l'historique de l'arène ? Cette action est irréversible !")) {
-    arenaHistory = []; // vide le tableau global
-    localStorage.setItem("arenaHistory", JSON.stringify(arenaHistory)); // sauvegarde
-    loadArenaHistory(); // rafraîchit la fenêtre arène
-    updateArenaStats(); // met à jour les stats victoires/défaites
-    alert("Historique de l'arène supprimé ✅");
+  // ========================
+  // SHOW VILLAGE
+  // ========================
+  function showVillage(playerData) {
+      villageDragon.style.display = 'none';
+      villageSerpent.style.display = 'none';
+
+      let villageEl, welcomeText, teamText, levelText, xpText;
+      if(playerData.character.team.includes('Dragon Pourpre')){
+          villageEl = villageDragon;
+          welcomeText = document.getElementById('welcomeTextDragon');
+          teamText = document.getElementById('teamTextDragon');
+          levelText = document.getElementById('levelTextDragon');
+          xpText = document.getElementById('xpTextDragon');
+      } else {
+          villageEl = villageSerpent;
+          welcomeText = document.getElementById('welcomeTextSerpent');
+          teamText = document.getElementById('teamTextSerpent');
+          levelText = document.getElementById('levelTextSerpent');
+          xpText = document.getElementById('xpTextSerpent');
+      }
+
+      villageEl.style.display = 'block';
+      loginPage.style.display = 'none';
+
+      welcomeText.textContent = `Bienvenue ${playerData.character.name}, ${playerData.character.classe}.`;
+      teamText.textContent = `Équipe : ${playerData.character.team}`;
+      levelText.textContent = `Niveau : ${playerData.level || 1}`;
+      xpText.textContent = `XP : ${playerData.xp || 0} / ${10 * (playerData.level || 1)}`;
+
+      const adminBtn = villageEl.querySelector('.adminBtn');
+      if(adminBtn) {
+          adminBtn.style.display = currentUser && auth.currentUser?.email === adminEmail ? 'inline-block' : 'none';
+          adminBtn.onclick = adminHandler;
+      }
+
+      const logoutBtn = villageEl.querySelector('.logoutBtn');
+      if(logoutBtn) logoutBtn.onclick = logoutPlayer;
+
+      document.querySelectorAll('.openCharacterSheetBtn').forEach(btn => {
+          btn.onclick = async () => {
+              const playerDoc = await db.collection('players').doc(currentUser).get();
+              const data = playerDoc.data();
+              if(!data.character){ alert("Aucun personnage créé."); return; }
+              openCharacterSheet(data);
+          };
+      });
   }
-};
 
+  function showVillageForCurrentUser(team){
+      if(team.includes('Dragon Pourpre')){
+          villageDragon.style.display = 'block';
+          villageSerpent.style.display = 'none';
+      } else {
+          villageDragon.style.display = 'none';
+          villageSerpent.style.display = 'block';
+      }
+  }
 
-// --- Gestion affichage bouton joueur / création ---
-async function updatePlayerButton() {
-    const user = auth.currentUser;
-    if(!user){
-        // aucun utilisateur connecté
-        createBtn.style.display = "inline-block";
-        playerBtn.style.display = "none";
-        return;
-    }
+  // ========================
+  // LOGOUT
+  // ========================
+  function logoutPlayer(){
+      auth.signOut();
+      currentUser = null;
+      villageDragon.style.display = 'none';
+      villageSerpent.style.display = 'none';
+      loginPage.style.display = 'block';
+  }
 
-    // Vérifier si le personnage existe dans Firebase
-    try {
-        const doc = await db.collection("popoteDragonCharacters").doc(user.uid).get();
-        if(doc.exists){
-            myCharacter = doc.data();
-            createBtn.style.display = "none";
-            playerBtn.textContent = myCharacter.name;
-            playerBtn.style.display = "inline-block";
+  // ========================
+  // ADMIN HANDLER
+  // ========================
+  async function adminHandler() {
+    overlay.style.display = 'block';
+    adminPopup.style.display = 'block';
+    adminPlayersList.innerHTML = '';
+
+    // Création du tableau
+    const table = document.createElement('table');
+
+    // Entête
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+        <tr style="background-color:#d4af37;color:#000;">
+            <th>Nom</th>
+            <th>Classe</th>
+            <th>Équipe</th>
+            <th>Niveau</th>
+            <th>XP</th>
+            <th>Actions</th>
+        </tr>
+    `;
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    const snapshot = await db.collection('players').get();
+
+    snapshot.forEach(docSnap => {
+        const player = docSnap.data();
+        const uid = docSnap.id;
+
+        const tr = document.createElement('tr');
+
+        if(player.character){
+            // Nom
+            const tdName = document.createElement('td');
+            const nameInput = document.createElement('input');
+            nameInput.value = player.character.name || '';
+            nameInput.style.width = '90%';
+            tdName.appendChild(nameInput);
+            tr.appendChild(tdName);
+
+            // Classe
+            const tdClass = document.createElement('td');
+            const classSelect = document.createElement('select');
+            ['Guerrier','Voleur','Mage','Nécromancien','Archer'].forEach(c=>{
+                const opt = document.createElement('option');
+                opt.value = c; opt.textContent = c;
+                classSelect.appendChild(opt);
+            });
+            classSelect.value = player.character.classe || '';
+            tdClass.appendChild(classSelect);
+            tr.appendChild(tdClass);
+
+            // Équipe
+            const tdTeam = document.createElement('td');
+            const teamSelect = document.createElement('select');
+            teamSelect.innerHTML = `
+                <option value="Ordre du Dragon Pourpre ⚔️">Ordre du Dragon Pourpre ⚔️</option>
+                <option value="Confrérie du Serpent Noir 🐍">Confrérie du Serpent Noir 🐍</option>
+            `;
+            teamSelect.value = player.character.team || "Ordre du Dragon Pourpre ⚔️";
+            tdTeam.appendChild(teamSelect);
+            tr.appendChild(tdTeam);
+
+            // Niveau
+            const tdLevel = document.createElement('td');
+            tdLevel.textContent = player.level || 1;
+            tr.appendChild(tdLevel);
+
+            // XP
+            const tdXP = document.createElement('td');
+            tdXP.textContent = player.xp || 0;
+            tr.appendChild(tdXP);
+
+            // Actions
+            const tdActions = document.createElement('td');
+
+            // Enregistrer
+            const saveBtn = document.createElement('button');
+            saveBtn.textContent = '💾';
+            saveBtn.onclick = async () => {
+                await db.collection('players').doc(uid).update({
+                    "character.name": nameInput.value,
+                    "character.classe": classSelect.value,
+                    "character.team": teamSelect.value
+                });
+                if(currentUser === uid) showVillageForCurrentUser(teamSelect.value);
+                adminHandler(); // refresh
+                alert('Modifications enregistrées !');
+            };
+            tdActions.appendChild(saveBtn);
+
+            // Supprimer
+            const delBtn = document.createElement('button');
+            delBtn.textContent = '🗑️';
+            delBtn.onclick = async () => {
+                if(confirm(`Supprimer ${player.character.name} ?`)){
+                    await db.collection('players').doc(uid).update({ character: null });
+                    adminHandler();
+                    alert('Personnage supprimé');
+                }
+            };
+            tdActions.appendChild(delBtn);
+
+            // Donner XP
+            const xpBtn = document.createElement('button');
+            xpBtn.textContent = '✨';
+            xpBtn.onclick = async () => {
+                const amount = parseInt(prompt("Combien d'XP donner ?"));
+                if(!amount || amount <= 0) return;
+                await giveXpToPlayer(uid, player, amount);
+                alert(`${amount} XP accordée`);
+                adminHandler();
+            };
+            tdActions.appendChild(xpBtn);
+
+            tr.appendChild(tdActions);
+
         } else {
-            myCharacter = null;
-            createBtn.style.display = "inline-block";
-            playerBtn.style.display = "none";
+            const td = document.createElement('td');
+            td.colSpan = 6;
+            td.textContent = 'Pas de personnage';
+            td.style.textAlign = 'center';
+            tr.appendChild(td);
         }
-    } catch(e){
-        console.error("Erreur chargement perso :", e);
-        createBtn.style.display = "inline-block";
-        playerBtn.style.display = "none";
-    }
-}
 
-// Observer état connexion Firebase
-auth.onAuthStateChanged(user => {
-  if (user) {
-    // Utilisateur connecté → on cache le bouton
-    if (createAccountBtn) {
-      createAccountBtn.style.display = "none";
-    }
-  } else {
-    // Utilisateur déconnecté → on montre le bouton
-    if (createAccountBtn) {
-      createAccountBtn.style.display = "inline-block";
-    }
-  }
-});
-document.addEventListener("DOMContentLoaded", () => {
-  const authBtn = document.getElementById("authBtn");
+        tbody.appendChild(tr);
+    });
 
-  auth.onAuthStateChanged(user => {
-    if (!authBtn) return;
-
-    if (user) {
-      authBtn.textContent = "🚪 Déconnexion";
-      authBtn.onclick = () => auth.signOut();
-    } else {
-      authBtn.textContent = "🔑 Connexion";
-      authBtn.onclick = () => {
-        document.getElementById("loginModal").style.display = "flex";
-      };
-    }
-  });
-});
+    table.appendChild(tbody);
+    adminPlayersList.appendChild(table);
 
 
-
-
-
-
-// Gérer clic sur le bouton connexion/déconnexion
-if (loginBtn) {
-  loginBtn.addEventListener("click", () => {
-    const user = firebase.auth().currentUser;
-    if (user) {
-      firebase.auth().signOut()
-        .then(() => alert("Déconnecté !"))
-        .catch(err => console.error("Erreur déconnexion :", err));
-    } else {
-      openLogin();
-    }
-  });
-}
-
-
-    
-// Bouton retour vers Popote & Compagnie
-document.getElementById("backToPopote").onclick = () => {
-  window.location.href = "https://pierrevalentin8.github.io/popote-compagnie/";
-};
-function showBackButton(show){
-  const btn = document.getElementById("backToPopote");
-  btn.style.display = show ? "block" : "none";
-}
-
-// Exemple : affichage seulement quand storyPanel est ouvert
-document.getElementById("storyBtn").onclick = async () => {
-  showBackButton(true);
-  // ... ton code existant
-};
-
-function closeStory(){
-  document.getElementById("storyPanel").style.display="none";
-  showBackButton(false);
+    // ===== Réparer le bouton fermer =====
+    adminClose.onclick = () => {
+        overlay.style.display = 'none';
+        adminPopup.style.display = 'none';
+    };
 }
 
 
 
 
-</script>
-
-<script>
-// --- Variables --- 
-let myCharacter = null;
-let stats={force:0,pv:0,defense:0,agilite:0};
-let totalPoints=10;
-
-
-// --- Création personnage ---
-document.getElementById("createBtn").onclick = () => { document.getElementById("creator").style.display = "block"; };
-function changeStat(stat, val){
-  if(val === 1 && totalPoints <= 0) return;
-  if(val === -1 && stats[stat] <= 0) return;
-
-  stats[stat] += val;
-  totalPoints = Math.max(0, totalPoints - val);
-
-  document.getElementById(stat).textContent = stats[stat];
-  document.getElementById("pointsLeft").textContent = totalPoints;
-}
-
-</script>
-<script>
-// --- Validation personnage ---
-function validateCharacter() {
-  const name = document.getElementById("name").value.trim();
-  const classe = document.getElementById("class").value;
-  const desc = document.getElementById("desc").value.trim();
-
-  if (!name || !classe || !desc) {
-    alert("Veuillez remplir tous les champs !");
-    return;
+  // ========================
+  // GIVE XP
+  // ========================
+  async function giveXpToPlayer(uid,player,xpGained){
+      if(!player.character){ alert("Pas de personnage !"); return; }
+      if(!player.character.stats) player.character.stats={attaque:0,defense:0,esquive:0,vie:0,pointsRestants:0};
+      let xp=player.xp||0;
+      let level=player.level||1;
+      let stats=player.character.stats;
+      xp+=xpGained;
+      let leveledUp=false;
+      let nextLevelXp=10*level;
+      while(xp>=nextLevelXp){
+          xp-=nextLevelXp;
+          level++;
+          stats.pointsRestants+=1;
+          leveledUp=true;
+          nextLevelXp=10*level;
+      }
+      await db.collection('players').doc(uid).update({xp:xp,level:level,"character.stats":stats});
+      if(leveledUp) alert(`🎉 ${player.character.name} monte niveau ${level} ! (+1 PC)`);
   }
 
-  const user = auth.currentUser;
-  if (!user) {
-    alert("Vous devez être connecté pour créer un personnage.");
-    return;
-  }
-
-  const newChar = {
-    name: name,
-    cls: classe,
-    desc: desc,
-    level: 1,
-    xp: 0,
-    freePoints: totalPoints,
-    stats: {...stats},
-    ownerUid: user.uid,
-    createdAt: new Date()
+  // ========================
+  // FICHE PERSONNAGE
+  // ========================
+  const statsElems = {
+      attaque: sheetAttaque,
+      defense: sheetDefense,
+      esquive: sheetEsquive,
+      vie: sheetVie
   };
 
-  db.collection("popoteDragonCharacters").doc(user.uid).set(newChar)
-  .then(() => {
-    myCharacter = newChar;
-    updatePlayerButton(); // <--- ajout pour cohérence
-    document.getElementById("creator").style.display = "none";
-    alert("Personnage créé !");
-    refreshSheet(myCharacter);
-  })
-
-    .catch(err => {
-      console.error(err);
-      alert("Erreur lors de la création du personnage.");
-    });
-}
-</script>
-
-<script>
-async function saveMyCharacter(){
-  const user = auth.currentUser;
-  if(!user || !myCharacter) return;
-  try{
-    await db.collection("popoteDragonCharacters").doc(user.uid).set(myCharacter);
-  }catch(e){
-    console.error("Erreur sauvegarde personnage :", e);
-  }
-}
-
-
-// --- XP & Niveau ---
-function xpForNextLevel(level){ return level*10; }
-function checkLevelUp(character){
-  let leveled = false;
-  while(character.xp >= xpForNextLevel(character.level)){
-    character.xp -= xpForNextLevel(character.level);
-    character.level++;
-    character.freePoints += 2;
-    leveled = true;
-  }
-
-  if(leveled){
-    refreshSheet(character);
-  }
-}
-
-function getTotalXP(character){
-  let total = character.xp;
-  for(let lvl=1;lvl<character.level;lvl++){total+=xpForNextLevel(lvl);}
-  return total;
-}
-
-// --- Fiche joueur ---
-document.getElementById("playerBtn").onclick = () => {
-  if(!myCharacter) return;
-  refreshSheet(myCharacter);
-  document.getElementById("charSheet").style.display = "block";
-}
-
-
-async function refreshSheet(c){
-  myCharacter = c;
-
-  document.getElementById("sheetName").textContent = c.name;
-  document.getElementById("sheetClass").textContent = c.cls;
-  document.getElementById("sheetLevel").textContent = c.level;
-  document.getElementById("sheetXP").textContent = c.xp + " XP";
-  document.getElementById("sheetDesc").textContent = c.desc;
-  document.getElementById("sheetForce").textContent = c.stats.force;
-  document.getElementById("sheetPV").textContent = c.stats.pv;
-  document.getElementById("sheetDefense").textContent = c.stats.defense;
-  document.getElementById("sheetAgilite").textContent = c.stats.agilite;
-  document.getElementById("freePoints").textContent = c.freePoints;
-
-  // --- XP Bar ---
-  const xpForNext = xpForNextLevel(c.level);
-  document.getElementById("sheetXPBar").style.width = Math.min(100, (c.xp / xpForNext) * 100) + "%";
-
-  // --- Dates ---
-  // Date de création
-  let createdText = "inconnue";
-  if(c.createdAt){
-    const d = c.createdAt.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
-    createdText = d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR");
-  }
-  document.getElementById("sheetCreatedAt").textContent = createdText;
-
-  // Dernière connexion
-  let lastLoginText = "jamais";
-  try {
-    const userDoc = await db.collection("users").doc(c.ownerUid).get();
-    if(userDoc.exists && userDoc.data().lastLogin){
-      const d = userDoc.data().lastLogin.toDate ? userDoc.data().lastLogin.toDate() : new Date(userDoc.data().lastLogin);
-      lastLoginText = d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR");
-    }
-  } catch(e){
-    console.error("Erreur récupération dernière connexion :", e);
-  }
-  document.getElementById("sheetLastLogin").textContent = lastLoginText;
-}
-
-
-
-
-function closeSheet(){document.getElementById("charSheet").style.display="none";}
-function saveDragonData(){
-  const c = myCharacter;
-  const bosses = JSON.parse(localStorage.getItem("bosses") || "[]");
-
-  db.collection("popoteDragon").doc("main").set({
-  
-    bosses
-  })
-  .then(()=>console.log("🔥 Dragon sauvegardé"))
-  .catch(err=>console.error("Firebase error:", err));
-}
-
-
-
-function loadDragonData(callback){
-  db.collection("popoteDragon").doc("main").get()
-    .then(doc=>{
-      if(doc.exists && doc.data().bosses){
-        bosses = doc.data().bosses;
-      }
-      if(callback) callback();
-    })
-    .catch(err=>console.error("Firebase load error:", err));
-}
-
-
-// --- Admin simplifié basé sur l'auth Popote & Compagnie ---
-document.getElementById("adminBtn").style.display = "none";
-
-// Vérifier si l'utilisateur est admin via le champ isAdmin dans Firestore
-auth.onAuthStateChanged(async (user) => {
-  if (!user) {
-    document.getElementById("createBtn").style.display = "inline-block";
-    document.getElementById("playerBtn").style.display = "none";
-    document.getElementById("adminBtn").style.display = "none";
-    return;
-  }
-
-  // Masquer le bouton par défaut
-  document.getElementById("adminBtn").style.display = "none";
-
-  // Charger le personnage pour voir s'il est admin
-  try {
-    const doc = await db.collection("popoteDragonCharacters").doc(user.uid).get();
-    if (doc.exists) {
-      myCharacter = doc.data();
-      document.getElementById("createBtn").style.display = "none";
-      document.getElementById("playerBtn").textContent = myCharacter.name;
-      document.getElementById("playerBtn").style.display = "inline-block";
-
-      // Afficher bouton Admin si isAdmin = true
-      if (myCharacter.isAdmin) {
-        document.getElementById("adminBtn").style.display = "inline-block";
-      }
-    } else {
-      myCharacter = null;
-      document.getElementById("createBtn").style.display = "inline-block";
-      document.getElementById("playerBtn").style.display = "none";
-    }
-  } catch (e) {
-    console.error("Erreur récupération personnage :", e);
-  }
-});
-
-
-
-// Bouton admin
-document.getElementById("adminBtn").onclick = () => {
-  renderAdminList();
-  document.getElementById("adminPanel").style.display = "block";
-};
-
-
-async function renderAdminList() {
-  const container = document.getElementById("adminCharList");
-  container.innerHTML = "";
-    
-  try {
-    const snapshot = await db.collection("popoteDragonCharacters").get();
-
-    // Charger tous les users pour lastLogin
-    const uids = snapshot.docs.map(doc => doc.data().ownerUid);
-    let usersMap = {};
-    if (uids.length > 0) {
-      const usersSnapshot = await db.collection("users")
-        .where(firebase.firestore.FieldPath.documentId(), "in", uids)
-        .get();
-      usersSnapshot.forEach(doc => {
-        usersMap[doc.id] = doc.data();
-      });
-    }
-
-    snapshot.forEach(doc => {
-      const c = doc.data();
-
-      // Conteneur principal compact
-      const div = document.createElement("div");
-      div.style.background = "#4a2d1a";
-      div.style.borderRadius = "6px";
-      div.style.padding = "6px 10px";
-      div.style.marginBottom = "6px";
-      div.style.display = "flex";
-      div.style.flexDirection = "column";
-      div.style.fontFamily = "'Courier New', monospace";
-
-      // Ligne 1 : Nom / Niv / XP + boutons
-      const line1 = document.createElement("div");
-      line1.style.display = "flex";
-      line1.style.justifyContent = "space-between";
-      line1.style.alignItems = "center";
-      line1.style.width = "100%";
-
-      const info1 = document.createElement("div");
-      info1.textContent = `${c.name} | Niv ${c.level} | XP ${c.xp}`;
-      info1.style.fontWeight = "bold";
-      info1.style.color = "#ffd700";
-      info1.style.textAlign = "left";
-      line1.appendChild(info1);
-
-      // Boutons
-      const actions = document.createElement("div");
-      actions.style.display = "flex";
-      actions.style.gap = "4px";
-      actions.style.alignItems = "center";
-
-      const xpInput = document.createElement("input");
-      xpInput.type = "number";
-      xpInput.placeholder = "XP";
-      xpInput.style.width = "50px";
-      xpInput.style.fontSize = "12px";
-      xpInput.style.padding = "2px";
-
-      const btnXP = document.createElement("button");
-      btnXP.textContent = "Donner XP";
-      btnXP.style.fontSize = "12px";
-      btnXP.onclick = async () => {
-        const xp = parseInt(xpInput.value);
-        if (isNaN(xp) || xp <= 0) return alert("XP invalide");
-
-        c.xp += xp;
-        checkLevelUp(c);
-
-        await db.collection("popoteDragonCharacters").doc(doc.id).update({
-          xp: c.xp,
-          level: c.level,
-          freePoints: c.freePoints
-        });
-
-        renderAdminList();
+  document.querySelectorAll('.stat-row .inc').forEach(btn=>{
+      btn.onclick = () => {
+          const stat = btn.dataset.stat;
+          let val = parseInt(statsElems[stat].textContent);
+          const totalPc = parseInt(pcText.dataset.totalPc);
+          const used = Object.values(statsElems).reduce((acc,e)=>acc+parseInt(e.textContent),0);
+          if(used < totalPc){
+              statsElems[stat].textContent = val + 1;
+              updateSheetPoints();
+          }
       };
+  });
 
-      const btnDel = document.createElement("button");
-      btnDel.textContent = "❌";
-      btnDel.style.background = "#c62828";
-      btnDel.style.color = "#fff";
-      btnDel.style.border = "none";
-      btnDel.style.borderRadius = "4px";
-      btnDel.style.padding = "2px 6px";
-      btnDel.style.cursor = "pointer";
-      btnDel.title = "Supprimer ce personnage";
-      btnDel.onclick = async () => {
-  if (confirm(`Supprimer ${c.name} ?`)) {
-    // Supprimer le personnage
-    await db.collection("popoteDragonCharacters").doc(doc.id).delete();
+  document.querySelectorAll('.stat-row .dec').forEach(btn=>{
+      btn.onclick = () => {
+          const stat = btn.dataset.stat;
+          let val = parseInt(statsElems[stat].textContent);
+          if(val > 0){
+              statsElems[stat].textContent = val - 1;
+              updateSheetPoints();
+          }
+      };
+  });
 
-    // Supprimer toutes les entrées de l'arène où il apparaît
-    arenaHistory = arenaHistory.filter(f => f.opponent !== c.name && f.player !== c.name);
-    localStorage.setItem("arenaHistory", JSON.stringify(arenaHistory));
+  function openCharacterSheet(playerData){
+      const stats = playerData.character.stats;
+      const totalPc = (stats.attaque||0) + (stats.defense||0) + (stats.esquive||0) + (stats.vie||0) + (stats.pointsRestants||0);
+      pcText.dataset.totalPc = totalPc;
 
-    // Recharger affichages
-    renderAdminList();
-    loadArenaHistory();
-    updateArenaStats();
+      sheetAttaque.textContent = stats.attaque || 0;
+      sheetDefense.textContent = stats.defense || 0;
+      sheetEsquive.textContent = stats.esquive || 0;
+      sheetVie.textContent = stats.vie || 0;
+
+      document.getElementById('sheetClass').textContent = `Classe : ${playerData.character.classe}`;
+      document.getElementById('sheetTeam').textContent = `Équipe : ${playerData.character.team}`;
+      document.getElementById('sheetLevel').textContent = `Niveau : ${playerData.level || 1}`;
+
+      updateSheetPoints();
+      overlay.style.display = 'block';
+      characterSheetPopup.style.display = 'block';
   }
-};
 
+  function updateSheetPoints(){
+      const used = parseInt(sheetAttaque.textContent) || 0
+                 + parseInt(sheetDefense.textContent) || 0
+                 + parseInt(sheetEsquive.textContent) || 0
+                 + parseInt(sheetVie.textContent) || 0;
+      const totalPc = parseInt(pcText.dataset.totalPc) || 0;
+      const remaining = totalPc - used;
+      pcText.textContent = `Points de Compétence restants : ${remaining}`;
+      pcText.style.color = remaining === 0 ? "red" : "#3b2f2f";
+  }
 
+  cancelStatsBtn.onclick = () => { overlay.style.display='none'; characterSheetPopup.style.display='none'; };
+  saveStatsBtn.onclick = async () => {
+      const attaque = parseInt(sheetAttaque.textContent) || 0;
+      const defense = parseInt(sheetDefense.textContent) || 0;
+      const esquive = parseInt(sheetEsquive.textContent) || 0;
+      const vie = parseInt(sheetVie.textContent) || 0;
 
+      const used = attaque + defense + esquive + vie;
+      const totalPc = parseInt(pcText.dataset.totalPc) || 0;
+      const remaining = totalPc - used;
 
-      actions.appendChild(xpInput);
-      actions.appendChild(btnXP);
-      actions.appendChild(btnDel);
+      if(remaining < 0){ alert("Vous avez dépassé vos points de compétence !"); return; }
 
-      line1.appendChild(actions);
-      div.appendChild(line1);
+      await db.collection('players').doc(currentUser).update({
+          "character.stats": {attaque, defense, esquive, vie, pointsRestants: remaining}
+      });
 
-      // Ligne 2 : Dates
-      const line2 = document.createElement("div");
-      line2.style.fontSize = "12px";
-      line2.style.color = "#fff2cc";
-      line2.style.textAlign = "left";
-      line2.style.marginTop = "2px";
+      pcText.dataset.pc = remaining;
+      pcText.textContent = `Points de Compétence restants : ${remaining}`;
+      pcText.style.color = remaining === 0 ? "red" : "#3b2f2f";
 
-      // Date création
-      let createdAtText = "inconnue";
-      if (c.createdAt) {
-        const d = c.createdAt.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
-        createdAtText = d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR");
+      overlay.style.display='none';
+      characterSheetPopup.style.display='none';
+      alert("Stats mises à jour !");
+  };
+
+  // ========================
+  // POPUPS
+  // ========================
+  function closeAllPopups(){
+      overlay.style.display = 'none';
+      createPopup.style.display = 'none';
+      loginPopup.style.display = 'none';
+      characterPopup.style.display = 'none';
+      characterSheetPopup.style.display = 'none';
+      adminPopup.style.display = 'none';
+  }
+
+  overlay.onclick = closeAllPopups;
+  document.getElementById('createBtn').onclick = () => { overlay.style.display='block'; createPopup.style.display='block'; };
+  document.getElementById('loginBtn').onclick = () => { overlay.style.display='block'; loginPopup.style.display='block'; };
+  document.getElementById('createBack').onclick = closeAllPopups;
+  document.getElementById('loginBack').onclick = closeAllPopups;
+
+  // CREATION COMPTE
+  document.getElementById('createSubmit').onclick = async () => {
+      const email = document.getElementById('createEmail').value;
+      const password = document.getElementById('createPassword').value;
+      if(email && password){
+          try {
+              const userCredential = await auth.createUserWithEmailAndPassword(email,password);
+              await db.collection('players').doc(userCredential.user.uid).set({character:null});
+              alert("Compte créé !");
+              closeAllPopups();
+          } catch(e){ alert(e.message); }
       }
+  };
 
-      // Dernière connexion
-      let lastLoginText = "jamais";
-      if (c.ownerUid && usersMap[c.ownerUid] && usersMap[c.ownerUid].lastLogin) {
-        const d = usersMap[c.ownerUid].lastLogin.toDate
-          ? usersMap[c.ownerUid].lastLogin.toDate()
-          : new Date(usersMap[c.ownerUid].lastLogin);
-        lastLoginText = d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR");
-      }
+  // CONNEXION
+  document.getElementById('loginSubmit').onclick = async () => {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      try{
+          const userCredential = await auth.signInWithEmailAndPassword(email,password);
+          currentUser = userCredential.user.uid;
+          const doc = await db.collection('players').doc(currentUser).get();
+          if(!doc.exists) await db.collection('players').doc(currentUser).set({character:null, level:1, xp:0});
+          closeAllPopups();
+      } catch(e){ alert("Erreur : " + e.message); }
+  };
 
-      line2.textContent = `Créé : ${createdAtText} | Dernière connexion : ${lastLoginText}`;
-      div.appendChild(line2);
+  // CREATION PERSONNAGE
+  document.getElementById('characterSubmit').onclick = async () => {
+      const name = document.getElementById('characterName').value;
+      const classe = document.getElementById('characterClass').value;
+      const attaque = parseInt(statAttaque.value)||0;
+      const defense = parseInt(statDefense.value)||0;
+      const esquive = parseInt(statEsquive.value)||0;
+      const vie = parseInt(statVie.value)||0;
+      const totalUsed = attaque+defense+esquive+vie;
+      if(totalUsed > creationPointsRestants){ alert("Vous avez dépassé vos 10 points !"); return; }
+      const team = teamToggle===0?'Ordre du Dragon Pourpre ⚔️':'Confrérie du Serpent Noir 🐍';
+      teamToggle = teamToggle===0?1:0;
+      await db.collection('players').doc(currentUser).set({
+          character:{name,classe,team,stats:{attaque,defense,esquive,vie,pointsRestants:creationPointsRestants-totalUsed}},
+          level:1,
+          xp:0
+      });
+      closeAllPopups();
+      showVillage({
+          character:{name,classe,team,stats:{attaque,defense,esquive,vie,pointsRestants:creationPointsRestants-totalUsed}},
+          level:1,
+          xp:0
+      });
+  };
 
-      container.appendChild(div);
-    });
-
-  } catch (e) {
-    console.error("Erreur MJ :", e);
-    alert("Impossible de charger les personnages : " + e.message);
-  }
-}
-
-
-
-
-
-
-
-// Vérifie si l'utilisateur est admin et affiche le bouton MJ
-function checkAdminButton() {
-  const user = auth.currentUser;
-  const ADMIN_EMAIL = "pierre.valentin8@gmail.com"; 
-
-  if (user && user.email === ADMIN_EMAIL) {
-    document.getElementById("adminBtn").style.display = "inline-block";
-  } else {
-    document.getElementById("adminBtn").style.display = "none";
-  }
-}
-
-// Après création de personnage ou connexion
-auth.onAuthStateChanged(user => {
-  updatePlayerButton();
-  checkAdminButton();
 });
-
-
-function closeAdmin(){ 
-  document.getElementById("adminPanel").style.display = "none";
-}
-
-// --- Boss / Histoire ---
-const defaultBosses = [
-  {name:"Graduku", hpMax:100, hp:100, defeated:false, xpReward:20},
-  {name:"Drakzor", hpMax:150, hp:150, defeated:false, xpReward:30},
-  {name:"Tornak", hpMax:200, hp:200, defeated:false, xpReward:40},
-  {name:"Morgath", hpMax:250, hp:250, defeated:false, xpReward:50},
-  {name:"Zeroth", hpMax:300, hp:300, defeated:false, xpReward:60},
-  {name:"Vulgrim", hpMax:350, hp:350, defeated:false, xpReward:70},
-  {name:"Fangor", hpMax:400, hp:400, defeated:false, xpReward:80},
-  {name:"Cindral", hpMax:450, hp:450, defeated:false, xpReward:90},
-  {name:"Oryn", hpMax:500, hp:500, defeated:false, xpReward:100},
-  {name:"Eldrax", hpMax:600, hp:600, defeated:false, xpReward:120}
-];
-
-let bosses = [];
-function initBosses(){
-  const saved = JSON.parse(localStorage.getItem("bosses") || "null");
-  if(saved && saved.length){
-    bosses = saved;
-  } else {
-    bosses = JSON.parse(JSON.stringify(defaultBosses));
-    localStorage.setItem("bosses", JSON.stringify(bosses));
-  }
-}
-
-function saveBosses(){ 
-  saveDragonData();
-}
-async function loadStory() {
-  // Assure que le personnage est chargé
-  if(!myCharacter){
-    alert("Crée ton personnage avant de voir l'histoire !");
-    return;
-  }
-
-  // Charger bosses depuis Firebase
-  try{
-    const doc = await db.collection("popoteDragon").doc("main").get();
-    if(doc.exists && doc.data().bosses && doc.data().bosses.length){
-      bosses = doc.data().bosses;
-      localStorage.setItem("bosses", JSON.stringify(bosses));
-    } else {
-      bosses = JSON.parse(JSON.stringify(defaultBosses));
-      localStorage.setItem("bosses", JSON.stringify(bosses));
-      await db.collection("popoteDragon").doc("main").set({bosses});
-    }
-
-    renderBossProgress();
-    renderBossList();
-    document.getElementById("storyPanel").style.display = "block";
-  } catch(e){
-    console.error("Erreur chargement Histoire :", e);
-    alert("Erreur de chargement de l'histoire : " + e.message);
-  }
-}
-
-// Bouton Histoire
-document.getElementById("storyBtn").onclick = loadStory;
-
-
-function initBossesIfEmpty(){
-  db.collection("popoteDragon").doc("main").get().then(doc=>{
-    if(!doc.exists){
-      db.collection("popoteDragon").doc("main").set({bosses:bosses});
-    }
-  });
-}
-
-
-function closeStory(){ document.getElementById("storyPanel").style.display="none"; }
-
-function renderBossProgress(){
-  const container=document.getElementById("bossProgress");
-  container.innerHTML="";
-
-  bosses.forEach((boss,index)=>{
-    if(!boss.name) return; // sécurité si boss mal formé
-
-    const div=document.createElement("div");
-    div.className="bossProgressItem";
-
-    if(boss.defeated) div.classList.add("bossVaincu");
-    else if(index===0 || bosses[index-1].defeated) div.classList.add("bossDisponible");
-    else div.classList.add("bossBloque");
-
-    div.textContent=boss.name.charAt(0);
-    container.appendChild(div);
-  });
-}
-
-
-function renderBossList(){
-  const container=document.getElementById("bossList");
-  container.innerHTML="";
-  if(!myCharacter) return;
-
-  bosses.forEach((boss,index)=>{
-    if(!boss.name || !boss.hpMax) return; // sécurité
-    const div=document.createElement("div");
-    div.className="boss-container";
-    const infoDiv=document.createElement("div");
-    infoDiv.className="boss-info";
-
-    let status="";
-    if(index>0 && !bosses[index-1].defeated){ status=" (Bloqué)"; div.style.opacity="0.5"; }
-    else if(boss.defeated){ status=" (Vaincu)"; }
-
-    infoDiv.textContent=`${boss.name} - PV: ${boss.hp}/${boss.hpMax}${status}`;
-
-    const hpBar=document.createElement("div"); hpBar.className="boss-hp-bar";
-    const hpFill=document.createElement("div"); hpFill.className="boss-hp-fill";
-    hpFill.style.width=(boss.hp/boss.hpMax*100)+"%";
-    hpBar.appendChild(hpFill);
-    infoDiv.appendChild(hpBar);
-    div.appendChild(infoDiv);
-
-    if(!boss.defeated && (index===0 || bosses[index-1].defeated)){
-      const attackBtn=document.createElement("button"); 
-      attackBtn.textContent="Attaquer";
-      attackBtn.onclick=()=>{ attackBoss(index); };
-      div.appendChild(attackBtn);
-    }
-    container.appendChild(div);
-  });
-}
-
-
-function attackBoss(index){
-  if(!myCharacter) return;
-  const boss = bosses[index];
-  const today = new Date().toDateString();
-
-  if(!myCharacter.lastAttack) myCharacter.lastAttack = {};
-  if(myCharacter.lastAttack[boss.name] === today){
-    alert("Vous ne pouvez attaquer ce boss qu'une fois par jour !");
-    return;
-  }
-
-  const dmg = Math.floor(myCharacter.stats.force + myCharacter.stats.agilite/2);
-  boss.hp = Math.max(0, boss.hp - dmg);
-
-  if(boss.hp === 0){
-    boss.defeated = true;
-    myCharacter.xp += boss.xpReward;
-    checkLevelUp(myCharacter);
-    alert(`Boss ${boss.name} vaincu !`);
-  }
-
-  myCharacter.lastAttack[boss.name] = today;
-
-  saveBosses();
-  saveMyCharacter();
-
-  renderBossProgress();
-  renderBossList();
-}
-
-
-
-
-
-
-
-async function duelAnimated(p1, p2){
-  let hp1 = p1.stats.pv, hp2 = p2.stats.pv;
-  let log = `Combat ${p1.name} vs ${p2.name}\n\n`;
-
-  let turn = 1;
-  while(hp1>0 && hp2>0){
-    await new Promise(r=>setTimeout(r, 200));
-
-    // Joueur attaque
-    let dmg1 = Math.max(0, p1.stats.force - p2.stats.defense);
-    if(Math.random()*100 < p2.stats.agilite*5) dmg1 = 0;
-    hp2 -= dmg1;
-    hp2 = Math.max(0,hp2);
-    log += `Tour ${turn} : ${p1.name} inflige ${dmg1} à ${p2.name} (${hp2} PV restant)\n`;
-    if(hp2<=0) break;
-
-    // Adversaire attaque
-    let dmg2 = Math.max(0, p2.stats.force - p1.stats.defense);
-    if(Math.random()*100 < p1.stats.agilite*5) dmg2 = 0;
-    hp1 -= dmg2;
-    hp1 = Math.max(0,hp1);
-    log += `Tour ${turn} : ${p2.name} inflige ${dmg2} à ${p1.name} (${hp1} PV restant)\n`;
-
-    turn++;
-  }
-
-  if(hp1>0) log += `\n🏆 ${p1.name} gagne le duel !\n`;
-  else log += `\n💀 ${p2.name} gagne le duel !\n`;
-
-  return log;
-}
-
-
-// --- Initialisation page ---
-window.onload = () => {
-  // Si myCharacter n'est pas encore défini, on peut juste ne rien faire pour l'instant
-  if(myCharacter) {
-    // tu peux éventuellement refreshSheet(myCharacter);
-  }
-
-  loadDragonData(() => {
-    renderBossProgress();
-    renderBossList();
-    initBossesIfEmpty();
-  });
-};
-
-// MODALES CREATION / LOGIN
-// -------------------------
-function openCreateAccount(){ document.getElementById("createAccountModal").style.display = "flex"; }
-function closeCreateAccount(){ document.getElementById("createAccountModal").style.display = "none"; }
-function openLogin(){ document.getElementById("loginModal").style.display = "flex"; }
-function closeLogin(){ document.getElementById("loginModal").style.display = "none"; }
-function togglePassword(id){
-  const input = document.getElementById(id);
-  input.type = input.type === "password" ? "text" : "password";
-}
-
-
-// Créer le compte via Firebase
-function createAccount() {
-    const email = document.getElementById("createEmail").value.trim();
-    const password = document.getElementById("createPassword").value;
-    if (!email || !password) { alert("Veuillez remplir tous les champs."); return; }
-
-auth.createUserWithEmailAndPassword(email, password)
-        .then(() => { alert("Compte créé avec succès !"); closeCreateAccount(); })
-        .catch(err => { alert("Erreur création compte : " + err.message); });
-}
-
-// Connexion via Firebase
-function login() {
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value;
-
-  if (!email || !password) {
-    alert("Veuillez remplir tous les champs.");
-    return;
-  }
-
-  auth.signInWithEmailAndPassword(email, password)
-    .then(async (cred) => {
-      alert("Connecté !");
-      closeLogin();
-
-      const user = cred.user;
-
-      // 🔽 Sauvegarde de la dernière connexion
-      await db.collection("users").doc(user.uid).set({
-        email: user.email,
-        lastLogin: new Date()
-      }, { merge: true });
-
-     updatePlayerButton();
-
-    })
-    .catch(err => alert("Erreur : " + err.message));
-}
-
-
-
-
-
-
-
 </script>
+
+
 </body>
 </html>
